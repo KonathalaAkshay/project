@@ -10,7 +10,7 @@ import {
 } from 'native-base';
 import { RefreshControl, useColorScheme } from 'react-native';
 import { useState, useCallback, useEffect } from 'react';
-import BottomNavBar from './BottomNav';
+import BottomNavBar from '../../Components/BottomNav';
 import axios from 'axios';
 
 const HomeCard = ({ navigation }) => {

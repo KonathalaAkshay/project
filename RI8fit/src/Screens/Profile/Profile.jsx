@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-import BottomNavBar from './BottomNav';
+import BottomNavBar from '../../Components/BottomNav';
 
 const { width, height } = Dimensions.get('window');
 
