@@ -1,40 +1,27 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { VStack, FormControl, Text, Box, ScrollView, HStack } from 'native-base';
+import {
+  VStack,
+  FormControl,
+  Text,
+  Box,
+  ScrollView,
+  HStack,
+  useToast,
+  Button as NBButton,
+} from 'native-base';
 import {
   TextInput,
   Button,
   PaperProvider,
   MD3LightTheme,
-  MD3DarkTheme,
 } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {
-  Alert,
-  StyleSheet,
-  useWindowDimensions,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+import axios from 'axios';
+// import FilePickerManager from 'react-native-file-picker';
 
-const Register = ({ navigation }) => {
-  const { width, height } = useWindowDimensions();
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-  const wp = p => (width * p) / 100;
-  const hp = p => (height * p) / 100;
-
-  const theme = {
-    ...(isDarkMode ? MD3DarkTheme : MD3LightTheme),
-    colors: {
-      ...(isDarkMode ? MD3DarkTheme.colors : MD3LightTheme.colors),
-      primary: '#3B82F6',
-      text: isDarkMode ? '#F3F4F6' : '#111827',
-      placeholder: isDarkMode ? '#9CA3AF' : '#6B7280',
-      background: isDarkMode ? '#374151' : '#FFFFFF',
-    },
-  };
-
+const Register = ({ navigation = { navigate: () => {} } }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -42,7 +29,8 @@ const Register = ({ navigation }) => {
     workStatus: '',
   });
   const [email, setEmail] = useState('');
-  const [accountCreated, setAccountCreated] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const toast = useToast();
 
   const isInvalidEmail = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isInvalidPhone = formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber);
@@ -57,273 +45,202 @@ const Register = ({ navigation }) => {
     if (!email.trim() || isInvalidEmail) return 'Valid email is required';
     if (!formData.phoneNumber.trim() || isInvalidPhone) return 'Valid 10-digit phone number is required';
     if (!formData.workStatus) return 'Work status is required';
+    if (!resumeFile) return 'Resume file is required';
+
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(resumeFile.type)) return 'Only PDF, DOC, DOCX files are allowed';
+
     return null;
   };
+
+  // const handleResumeUpload = () => {
+  //   FilePickerManager.showFilePicker(null, (response) => {
+  //     if (response.didCancel) return;
+  //     if (response.error) {
+  //       toast.show({ description: 'File selection failed.' });
+  //       return;
+  //     }
+
+  //     setResumeFile({
+  //       uri: Platform.OS === 'ios' ? response.uri.replace('file://', '') : response.uri,
+  //       name: response.fileName,
+  //       type: response.type,
+  //     });
+
+  //     toast.show({ description: `Resume selected: ${response.fileName}` });
+  //   });
+  // };
 
   const handleSubmit = async () => {
     const error = validateForm();
     if (error) {
-      Alert.alert('Validation Error', error);
+      toast.show({ description: error });
       return;
     }
 
     try {
-      const response = await new Promise(resolve =>
-        setTimeout(
-          () => resolve({ status: 201, data: { token: 'sample-token' } }),
-          1000,
-        ),
-      );
+      const data = new FormData();
+      data.append('firstName', formData.firstName);
+      data.append('lastName', formData.lastName);
+      data.append('email', email);
+      data.append('phoneNumber', formData.phoneNumber);
+      data.append('workStatus', formData.workStatus);
+      data.append('resume', {
+        uri: resumeFile.uri,
+        name: resumeFile.name,
+        type: resumeFile.type,
+      });
 
-      if (response.status === 201) {
-        setAccountCreated(true);
-        setTimeout(() => setAccountCreated(false), 3000);
-        setFormData({
-          firstName: '',
-          lastName: '',
-          phoneNumber: '',
-          workStatus: '',
-        });
-        setEmail('');
+      const response = await axios.post('https://your-api-endpoint.com/register', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        toast.show({ description: 'Account created successfully!' });
         navigation.navigate('ResumeUpload');
+
+        // Reset form
+        setFormData({ firstName: '', lastName: '', phoneNumber: '', workStatus: '' });
+        setEmail('');
+        setResumeFile(null);
       }
-    } catch {
-      Alert.alert('Error', 'Failed to create account. Please try again.');
+    } catch (error) {
+      console.error(error);
+      toast.show({ description: 'Failed to submit form. Please try again.' });
     }
   };
 
   return (
-    <PaperProvider theme={theme}>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: isDarkMode ? '#111827' : '#F3F4F6',
-        }}
-      >
-        <ScrollView contentContainerStyle={{ paddingBottom: hp(5) }}>
-          <Box
-            borderRadius="2xl"
-            shadow={4}
-            p={5}
-            m={4}
-            mt={4}
-            mb={hp(2)}
-            bg={isDarkMode ? '#1F2937' : '#FFFFFF'}
-            style={styles.box}
-          >
-            <Text
-              fontSize={24}
-              fontWeight="bold"
-              mb={4}
-              color={isDarkMode ? '#F3F4F6' : '#111827'}
-            >
-              Create Your RI8FIT Profile
-            </Text>
+    <PaperProvider theme={MD3LightTheme}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Box bg="white" p="6" rounded="2xl" shadow={5} width="100%" maxW="400">
+          <Text fontSize="xl" fontWeight="bold" mb="5">
+            Create Your RI8FIT Profile
+          </Text>
 
-            <VStack space={hp(2)}>
-              {/* First Name Field */}
-              <FormControl isRequired isInvalid={!formData.firstName.trim() && formData.firstName !== ''}>
-                <FormControl.Label>First Name</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter first name"
-                  value={formData.firstName}
-                  onChangeText={value => handleInputChange('firstName', value)}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="person"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-                {!formData.firstName.trim() && formData.firstName !== '' && (
-                  <Text color="red.500" fontSize="xs" mt={1}>
-                    First name is required
-                  </Text>
-                )}
-              </FormControl>
+          <VStack space={4}>
+            {/* First Name */}
+            <FormControl isRequired isInvalid={!formData.firstName.trim() && formData.firstName !== ''}>
+              <FormControl.Label>First Name</FormControl.Label>
+              <TextInput
+                mode="outlined"
+                label="First Name"
+                value={formData.firstName}
+                onChangeText={val => handleInputChange('firstName', val)}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} />} />}
+              />
+              <FormControl.ErrorMessage>First name is required</FormControl.ErrorMessage>
+            </FormControl>
 
-              {/* Last Name Field */}
-              <FormControl isRequired isInvalid={!formData.lastName.trim() && formData.lastName !== ''}>
-                <FormControl.Label>Last Name</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter last name"
-                  value={formData.lastName}
-                  onChangeText={value => handleInputChange('lastName', value)}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="person"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-                {!formData.lastName.trim() && formData.lastName !== '' && (
-                  <Text color="red.500" fontSize="xs" mt={1}>
-                    Last name is required
-                  </Text>
-                )}
-              </FormControl>
+            {/* Last Name */}
+            <FormControl isRequired isInvalid={!formData.lastName.trim() && formData.lastName !== ''}>
+              <FormControl.Label>Last Name</FormControl.Label>
+              <TextInput
+                mode="outlined"
+                label="Last Name"
+                value={formData.lastName}
+                onChangeText={val => handleInputChange('lastName', val)}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} />} />}
+              />
+              <FormControl.ErrorMessage>Last name is required</FormControl.ErrorMessage>
+            </FormControl>
 
-              {/* Email Field */}
-              <FormControl isRequired isInvalid={isInvalidEmail}>
-                <FormControl.Label>Email Address</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter email"
-                  value={email}
-                  keyboardType="email-address"
-                  onChangeText={setEmail}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="email"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-                {isInvalidEmail && (
-                  <Text color="red.500" fontSize="xs" mt={1}>
-                    Valid email is required
-                  </Text>
-                )}
-              </FormControl>
+            {/* Email */}
+            <FormControl isRequired isInvalid={isInvalidEmail}>
+              <FormControl.Label>Email</FormControl.Label>
+              <TextInput
+                mode="outlined"
+                label="Email"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} />} />}
+              />
+              <FormControl.ErrorMessage>Valid email is required</FormControl.ErrorMessage>
+            </FormControl>
 
-              {/* Phone Number Field */}
-              <FormControl isRequired isInvalid={isInvalidPhone}>
-                <FormControl.Label>Phone Number</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter phone number"
-                  value={formData.phoneNumber}
-                  keyboardType="phone-pad"
-                  onChangeText={value => handleInputChange('phoneNumber', value)}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="phone"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-                {isInvalidPhone && (
-                  <Text color="red.500" fontSize="xs" mt={1}>
-                    Valid 10-digit phone number is required
-                  </Text>
-                )}
-              </FormControl>
+            {/* Phone Number */}
+            <FormControl isRequired isInvalid={isInvalidPhone}>
+              <FormControl.Label>Phone Number</FormControl.Label>
+              <TextInput
+                mode="outlined"
+                label="Phone Number"
+                keyboardType="phone-pad"
+                value={formData.phoneNumber}
+                onChangeText={val => handleInputChange('phoneNumber', val)}
+                left={<TextInput.Icon icon={() => <MaterialIcons name="phone" size={20} />} />}
+              />
+              <FormControl.ErrorMessage>Valid 10-digit phone number is required</FormControl.ErrorMessage>
+            </FormControl>
 
-              {/* Work Status Field */}
-              <FormControl isRequired isInvalid={!formData.workStatus && formData.workStatus !== ''}>
-                <FormControl.Label>Work Status</FormControl.Label>
-                <HStack space={2} justifyContent="space-between">
-                  <Button
-                    mode={formData.workStatus === 'experienced' ? 'contained' : 'outlined'}
-                    onPress={() => handleInputChange('workStatus', 'experienced')}
-                    style={[styles.statusButton, { width: wp(45) }]}
-                    labelStyle={{
-                      fontSize: wp(4),
-                      color: formData.workStatus === 'experienced' ? '#FFFFFF' : '#3B82F6',
-                    }}
-                  >
-                    I'm Experienced
-                  </Button>
-                  <Button
-                    mode={formData.workStatus === 'fresher' ? 'contained' : 'outlined'}
-                    onPress={() => handleInputChange('workStatus', 'fresher')}
-                    style={[styles.statusButton, { width: wp(45) }]}
-                    labelStyle={{
-                      fontSize: wp(4),
-                      color: formData.workStatus === 'fresher' ? '#FFFFFF' : '#3B82F6',
-                    }}
-                  >
-                    I'm a Fresher
-                  </Button>
-                </HStack>
-                {!formData.workStatus && formData.workStatus !== '' && (
-                  <Text color="red.500" fontSize="xs" mt={1}>
-                    Work status is required
-                  </Text>
-                )}
-              </FormControl>
+            {/* Work Status */}
+            <FormControl isRequired isInvalid={!formData.workStatus}>
+              <FormControl.Label>Work Status</FormControl.Label>
+              <HStack space={3}>
+                <NBButton
+                  flex={1}
+                  variant={formData.workStatus === 'experienced' ? 'solid' : 'outline'}
+                  onPress={() => handleInputChange('workStatus', 'experienced')}
+                >
+                  I'm Experienced
+                </NBButton>
+                <NBButton
+                  flex={1}
+                  variant={formData.workStatus === 'fresher' ? 'solid' : 'outline'}
+                  onPress={() => handleInputChange('workStatus', 'fresher')}
+                >
+                  I'm a Fresher
+                </NBButton>
+              </HStack>
+              <FormControl.ErrorMessage>Work status is required</FormControl.ErrorMessage>
+            </FormControl>
 
-              {/* Submit Button */}
+            {/* Resume Upload */}
+            {/* <FormControl isRequired isInvalid={!resumeFile}>
+              <FormControl.Label>Upload Resume</FormControl.Label>
               <Button
-                mode="contained"
-                onPress={handleSubmit}
-                style={styles.submitButton}
-                labelStyle={{
-                  fontSize: wp(4.5),
-                  fontWeight: 'bold',
-                  color: '#FFFFFF',
-                }}
+                mode="outlined"
+                icon="upload"
+                // onPress={handleResumeUpload}
               >
-                Next
+                {resumeFile ? 'Change Resume' : 'Upload Resume'}
               </Button>
-
-              {/* Success Message */}
-              {accountCreated && (
-                <Box bg="green.100" p={3} borderRadius="md">
-                  <Text color="green.800" fontWeight="bold">
-                    OTP sent successfully
-                  </Text>
-                </Box>
+              {resumeFile && (
+                <Text fontSize="xs" mt="2" color="gray.500">
+                  Selected: {resumeFile.name}
+                </Text>
               )}
-            </VStack>
-          </Box>
-        </ScrollView>
-      </View>
+              {!resumeFile && (
+                <FormControl.ErrorMessage>Resume file is required</FormControl.ErrorMessage>
+              )}
+            </FormControl> */}
+
+            {/* Submit Button */}
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              style={{ marginTop: 20 }}
+            >
+              Submit
+            </Button>
+          </VStack>
+        </Box>
+      </ScrollView>
     </PaperProvider>
   );
 };
 
+export default Register;
+
 const styles = StyleSheet.create({
-  box: {
-    borderRadius: 16,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  textInput: {
-    backgroundColor: 'transparent',
-  },
-  statusButton: {
-    borderRadius: 8,
-    paddingVertical: 4,
-  },
-  submitButton: {
-    marginTop: 20,
-    backgroundColor: '#3B82F6',
-    borderRadius: 100,
-    paddingVertical: 6,
-    alignSelf: 'flex-end',
-    paddingHorizontal: 30,
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#f2f2f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
 });
-
-export default Register;
