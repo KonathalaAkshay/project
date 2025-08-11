@@ -1,1 +1,1 @@
-BASE_URL = "https://backend.invotrx.com"
+BASE_URL = "https://dev-backend.invotrx.com"

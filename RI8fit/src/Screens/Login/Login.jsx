@@ -17,7 +17,7 @@ import { TextInput, StyleSheet, Linking } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import api from '../../API/api'; // Import your axios instance
 
-const Login = ({ navigation }) => {
+const Login = ({ navigation = { navigate: () => {} } }) => {
   const [email, setEmail] = useState('akshay@gmail.com');
   const [password, setPassword] = useState('12345678');
   const toast = useToast();
@@ -25,11 +25,11 @@ const Login = ({ navigation }) => {
   // Handle deep links for Google OAuth redirect
   useEffect(() => {
     const handleDeepLink = ({ url }) => {
-      if (url && url.includes('myapp://auth')) {
+      if (url && url.includes('RI8fit://auth')) {
         const params = new URLSearchParams(url.split('?')[1]);
         const success = params.get('success');
         if (success === 'true') {
-          navigation.navigate('HomeCard');
+          navigation.navigate('Register');
         } else {
           toast.show({
             description: params.get('error') || 'Google Sign-Up failed',
@@ -44,7 +44,7 @@ const Login = ({ navigation }) => {
 
     // Handle initial URL when app is opened from a killed state
     Linking.getInitialURL().then((url) => {
-      if (url && url.includes('myapp://auth')) {
+      if (url && url.includes('RI8fit://auth')) {
         handleDeepLink({ url });
       }
     });
@@ -68,8 +68,10 @@ const Login = ({ navigation }) => {
   };
 
   const handleSignUpWithGoogle = async () => {
+
+    // navigation.navigate('Register');
     try {
-      const response = await api.get('/auth/candidate/google/signup');
+      const response = await api.get('/auth/candidate/google/mobile/signup');
 
       if (
         response.data &&
@@ -80,8 +82,8 @@ const Login = ({ navigation }) => {
         const { google_oauth_url } = response.data.data;
         const supported = await Linking.canOpenURL(google_oauth_url);
         if (response.status === 200) {
-          // await Linking.openURL(google_oauth_url);
-          navigation.navigate('Register');
+          await Linking.openURL(google_oauth_url);
+          // navigation.navigate('Register');
         } else {
           throw new Error('Cannot open Google OAuth URL');
         }

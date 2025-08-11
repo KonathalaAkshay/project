@@ -21,15 +21,13 @@ import { StyleSheet, Platform } from 'react-native';
 import axios from 'axios';
 // import FilePickerManager from 'react-native-file-picker';
 
-const Register = ({ navigation = { navigate: () => {} } }) => {
+const BasicDetails = ({ navigation = { navigate: () => {} } }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phoneNumber: '',
-    workStatus: '',
   });
   const [email, setEmail] = useState('');
-  const [resumeFile, setResumeFile] = useState(null);
   const toast = useToast();
 
   const isInvalidEmail = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -44,11 +42,6 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
     if (!formData.lastName.trim()) return 'Last name is required';
     if (!email.trim() || isInvalidEmail) return 'Valid email is required';
     if (!formData.phoneNumber.trim() || isInvalidPhone) return 'Valid 10-digit phone number is required';
-    if (!formData.workStatus) return 'Work status is required';
-    if (!resumeFile) return 'Resume file is required';
-
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(resumeFile.type)) return 'Only PDF, DOC, DOCX files are allowed';
 
     return null;
   };
@@ -73,7 +66,8 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
 
   const handleSubmit = async () => {
 
-    navigation.navigate('BasicDetails');
+    navigation.navigate('EmploymentDetail');
+    
     // const error = validateForm();
     // if (error) {
     //   toast.show({ description: error });
@@ -86,6 +80,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
     //   data.append('lastName', formData.lastName);
     //   data.append('email', email);
     //   data.append('phoneNumber', formData.phoneNumber);
+    //   ;
 
     //   const response = await axios.post('https://your-api-endpoint.com/register', data, {
     //     headers: {
@@ -94,9 +89,6 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
     //   });
 
     //   if (response.status === 200 || response.status === 201) {
-    //     toast.show({ description: 'Account created successfully!' });
-    //     navigation.navigate('ResumeUpload');
-
     //     // Reset form
     //     setFormData({ firstName: '', lastName: '', phoneNumber: '' });
     //     setEmail('');
@@ -112,7 +104,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
       <ScrollView contentContainerStyle={styles.container}>
         <Box bg="white" p="6" rounded="2xl" shadow={5} width="100%" maxW="400">
           <Text fontSize="xl" fontWeight="bold" mb="5">
-            Create Your RI8FIT Profile
+            Basic Details
           </Text>
 
           <VStack space={4}>
@@ -171,47 +163,6 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
               <FormControl.ErrorMessage>Valid 10-digit phone number is required</FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Work Status */}
-            <FormControl isRequired isInvalid={!formData.workStatus}>
-              <FormControl.Label>Work Status</FormControl.Label>
-              <HStack space={3}>
-                <NBButton
-                  flex={1}
-                  variant={formData.workStatus === 'experienced' ? 'solid' : 'outline'}
-                  onPress={() => handleInputChange('workStatus', 'experienced')}
-                >
-                  I'm Experienced
-                </NBButton>
-                <NBButton
-                  flex={1}
-                  variant={formData.workStatus === 'fresher' ? 'solid' : 'outline'}
-                  onPress={() => handleInputChange('workStatus', 'fresher')}
-                >
-                  I'm a Fresher
-                </NBButton>
-              </HStack>
-              <FormControl.ErrorMessage>Work status is required</FormControl.ErrorMessage>
-            </FormControl>
-
-            {/* Resume Upload */}
-            {/* <FormControl isRequired isInvalid={!resumeFile}>
-              <FormControl.Label>Upload Resume</FormControl.Label>
-              <Button
-                mode="outlined"
-                icon="upload"
-                // onPress={handleResumeUpload}
-              >
-                {resumeFile ? 'Change Resume' : 'Upload Resume'}
-              </Button>
-              {resumeFile && (
-                <Text fontSize="xs" mt="2" color="gray.500">
-                  Selected: {resumeFile.name}
-                </Text>
-              )}
-              {!resumeFile && (
-                <FormControl.ErrorMessage>Resume file is required</FormControl.ErrorMessage>
-              )}
-            </FormControl> */}
 
             {/* Submit Button */}
             <Button
@@ -219,7 +170,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
               onPress={handleSubmit}
               style={{ marginTop: 20 }}
             >
-              Submit
+              Save and Next
             </Button>
           </VStack>
         </Box>
@@ -228,7 +179,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
   );
 };
 
-export default Register;
+export default BasicDetails;
 
 const styles = StyleSheet.create({
   container: {

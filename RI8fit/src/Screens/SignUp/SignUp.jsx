@@ -68,7 +68,7 @@ const SignUp = ({ navigation }) => {
         setTimeout(() => {
           setAccountCreated(false);
           setEmail('');
-          navigation.navigate('ResumeUpload');
+          navigation.navigate('VerifyOTP');
         }, 3000);
       }
     } catch (error) {

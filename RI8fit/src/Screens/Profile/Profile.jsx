@@ -120,7 +120,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
 
   // API base URL for Random User API
-  const API_BASE_URL = 'https://randomuser.me/api';
+  const API_BASE_URL = '';
 
   // Fetch profile data on component mount
   useEffect(() => {
