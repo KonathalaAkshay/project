@@ -7,7 +7,7 @@ import api from '../../API/api'; // your axios instance
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const VerifyOTP = ({ route, navigation }) => {
-  const { email } = route.params || {};
+  const { email } = route.params;
   const { width, height } = useWindowDimensions();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
