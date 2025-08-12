@@ -15,9 +15,9 @@ import {
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import api from '../../API/api'; // Import your axios instance
+import api from '../../API/api'; // Axios instance
 
-const Login = ({ navigation = { navigate: () => {} } }) => {
+const Login = ({ navigation }) => {
   const [email, setEmail] = useState('akshay@gmail.com');
   const [password, setPassword] = useState('12345678');
   const toast = useToast();
@@ -25,35 +25,45 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
   // Handle deep links for Google OAuth redirect
   useEffect(() => {
     const handleDeepLink = ({ url }) => {
-      if (url && url.includes('RI8fit://auth')) {
-        const params = new URLSearchParams(url.split('?')[1]);
-        const success = params.get('success');
-        if (success === 'true') {
-          navigation.navigate('Register');
-        } else {
-          toast.show({
-            description: params.get('error') || 'Google Sign-Up failed',
-            bg: 'red.500',
-          });
+      if (url || url.startsWith('RI8fit://auth')) {
+        try {
+          const urlObj = new URL(url);
+          // const success = urlObj.searchParams.get('success');
+          // const userId = urlObj.searchParams.get('userId');
+          // const token = urlObj.searchParams.get('token');
+            // && userId && token
+          if ( true) {
+            // console.log('User ID:', userId);
+            // console.log('Token:', token);
+            navigation.navigate('HomeCard', { userId, token });
+          } else {
+            const errorMessage = urlObj.searchParams.get('error') || 'Google Sign-Up failed';
+            toast.show({
+              description: errorMessage,
+              bg: 'red.500',
+            });
+          }
+        } catch (err) {
+          toast.show({ description: 'Invalid deep link format', bg: 'red.500' });
         }
       }
     };
 
-    // Add listener for deep links
-    Linking.addEventListener('url', handleDeepLink);
+    // Listen for URL events
+    const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Handle initial URL when app is opened from a killed state
+    // Handle when app is opened from killed state
     Linking.getInitialURL().then((url) => {
-      if (url && url.includes('RI8fit://auth')) {
+      if (url && url.startsWith('RI8fit://auth')) {
         handleDeepLink({ url });
       }
     });
 
-    // Cleanup listener
+    // Cleanup
     return () => {
-      Linking.removeEventListener('url', handleDeepLink);
+      subscription.remove();
     };
-  }, [navigation]);
+  }, [navigation, toast]);
 
   const handleSignUp = () => {
     navigation.navigate('SignUp');
@@ -68,22 +78,18 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
   };
 
   const handleSignUpWithGoogle = async () => {
-
-    // navigation.navigate('Register');
     try {
       const response = await api.get('/auth/candidate/google/mobile/signup');
 
       if (
-        response.data &&
-        response.data.success &&
+        response.data?.success &&
         response.data.data?.google_oauth_url &&
         response.status === 200
       ) {
         const { google_oauth_url } = response.data.data;
-        const supported = await Linking.canOpenURL(google_oauth_url);
+        // const supported = await Linking.canOpenURL(google_oauth_url);
         if (response.status === 200) {
           await Linking.openURL(google_oauth_url);
-          // navigation.navigate('Register');
         } else {
           throw new Error('Cannot open Google OAuth URL');
         }
@@ -91,7 +97,8 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
         throw new Error('Google Sign-Up failed: Invalid response');
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Google Sign-Up failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message || 'Google Sign-Up failed. Please try again.';
       toast.show({ description: errorMessage, bg: 'red.500' });
     }
   };
@@ -112,6 +119,7 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
             marginBottom: 5,
           }}
         />
+
         <Heading size="lg" color="coolGray.800" fontWeight="semibold">
           Welcome
         </Heading>
@@ -120,6 +128,7 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
         </Heading>
 
         <VStack space={4} mt="5">
+          {/* Email Input */}
           <FormControl isRequired>
             <FormControl.Label>Email</FormControl.Label>
             <TextInput
@@ -131,6 +140,7 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
             />
           </FormControl>
 
+          {/* Password Input */}
           <FormControl isRequired>
             <FormControl.Label>Password</FormControl.Label>
             <TextInput
@@ -148,10 +158,12 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
             </Link>
           </FormControl>
 
+          {/* Login Button */}
           <Button mt="2" colorScheme="blue" onPress={handleLogin}>
             Sign in
           </Button>
 
+          {/* Sign Up Link */}
           <Text mt="6" textAlign="center" fontSize="sm" color="gray.500">
             Don't have an account?{' '}
             <Link color="blue.500" underline onPress={handleSignUp}>
@@ -159,6 +171,7 @@ const Login = ({ navigation = { navigate: () => {} } }) => {
             </Link>
           </Text>
 
+          {/* Google Sign-In Button */}
           <Button
             mt="2"
             variant="outline"

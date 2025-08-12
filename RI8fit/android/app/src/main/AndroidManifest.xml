@@ -30,7 +30,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="myapp"
+                    android:scheme="RI8fit"
                     android:host="auth" />
             </intent-filter>
         </activity>
