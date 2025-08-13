@@ -14,8 +14,8 @@ import {
   Icon,
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import api from '../../API/api'; // Axios instance
+import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('akshay@gmail.com');
@@ -31,20 +31,24 @@ const Login = ({ navigation }) => {
           // const success = urlObj.searchParams.get('success');
           // const userId = urlObj.searchParams.get('userId');
           // const token = urlObj.searchParams.get('token');
-            // && userId && token
-          if ( true) {
+          // && userId && token
+          if (true) {
             // console.log('User ID:', userId);
             // console.log('Token:', token);
             navigation.navigate('HomeCard', { userId, token });
           } else {
-            const errorMessage = urlObj.searchParams.get('error') || 'Google Sign-Up failed';
+            const errorMessage =
+              urlObj.searchParams.get('error') || 'Google Sign-Up failed';
             toast.show({
               description: errorMessage,
               bg: 'red.500',
             });
           }
         } catch (err) {
-          toast.show({ description: 'Invalid deep link format', bg: 'red.500' });
+          toast.show({
+            description: 'Invalid deep link format',
+            bg: 'red.500',
+          });
         }
       }
     };
@@ -53,7 +57,7 @@ const Login = ({ navigation }) => {
     const subscription = Linking.addEventListener('url', handleDeepLink);
 
     // Handle when app is opened from killed state
-    Linking.getInitialURL().then((url) => {
+    Linking.getInitialURL().then(url => {
       if (url && url.startsWith('RI8fit://auth')) {
         handleDeepLink({ url });
       }
@@ -98,7 +102,8 @@ const Login = ({ navigation }) => {
       }
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || 'Google Sign-Up failed. Please try again.';
+        error.response?.data?.message ||
+        'Google Sign-Up failed. Please try again.';
       toast.show({ description: errorMessage, bg: 'red.500' });
     }
   };
@@ -184,8 +189,8 @@ const Login = ({ navigation }) => {
             onPress={handleSignUpWithGoogle}
             leftIcon={
               <Icon
-                as={FontAwesome5}
-                name="google"
+                as={MaterialIcons}
+                name="google" 
                 size="sm"
                 color="#4285F4"
                 mr="2"
@@ -194,11 +199,7 @@ const Login = ({ navigation }) => {
             _hover={{ bg: 'gray.50' }}
             shadow="2"
           >
-            <HStack alignItems="center">
-              <Text fontSize="sm" color="gray.800">
-                Continue with Google
-              </Text>
-            </HStack>
+            Continue with Google
           </Button>
         </VStack>
       </Box>
