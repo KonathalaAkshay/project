@@ -16,6 +16,7 @@ import {
 import { TextInput, StyleSheet, Linking } from 'react-native';
 import api from '../../API/api'; // Axios instance
 import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
+import GoogleIcon from '../../Store/GoogleIcon';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('akshay@gmail.com');
@@ -187,19 +188,11 @@ const Login = ({ navigation }) => {
             _text={{ color: 'gray.800', fontWeight: 'medium' }}
             _pressed={{ bg: 'gray.100' }}
             onPress={handleSignUpWithGoogle}
-            leftIcon={
-              <Icon
-                as={MaterialIcons}
-                name="google" 
-                size="sm"
-                color="#4285F4"
-                mr="2"
-              />
-            }
             _hover={{ bg: 'gray.50' }}
             shadow="2"
+            leftIcon={<GoogleIcon size={20} />} // 👈 Icon on left side
           >
-            Continue with Google
+            Sign Up with Google
           </Button>
         </VStack>
       </Box>

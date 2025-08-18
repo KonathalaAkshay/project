@@ -43,7 +43,7 @@ const SkillsPage = ({ navigation }) => {
   };
 
   const handleSubmit = () => {
-    navigation.navigate('Profile');
+    navigation.navigate('Login');
   };
 
   return (

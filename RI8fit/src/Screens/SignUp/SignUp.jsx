@@ -69,7 +69,7 @@ const SignUp = ({ navigation }) => {
           setAccountCreated(false);
           setEmail('');
           navigation.navigate('VerifyOTP',{email});
-        }, 3000);
+        }, 500);
       }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to create account. Please try again.');
