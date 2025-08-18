@@ -1,26 +1,47 @@
 /* eslint-disable react-native/no-inline-styles */
-import { VStack, Text, Pressable, Icon, Box, ScrollView, Button } from 'native-base';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import React from 'react';
-import { Dimensions, Alert, useColorScheme, View } from 'react-native';
+import {
+  VStack,
+  Text,
+  Pressable,
+  Icon,
+  Box,
+  ScrollView,
+  Button,
+} from 'native-base';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { Dimensions, useColorScheme, View } from 'react-native';
+import { useFilePicker } from '../../Components/ResumeUplod/FileUpload';
 
 const ResumeUpload = ({ navigation }) => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
+
   const { width, height } = Dimensions.get('window');
   const wp = percentage => (width * percentage) / 100;
   const hp = percentage => (height * percentage) / 100;
+
+  const { file, pickFile } = useFilePicker();
 
   const handleSubmit = () => {
     navigation.navigate('Education');
   };
 
-  const handleUpload = () => {
-    Alert.alert('Upload Resume', 'Resume upload functionality not implemented yet.');
+  const handleUpload = async () => {
+    try {
+      await pickFile();
+    } catch (error) {
+      console.error('File upload error:', error);
+    }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDarkMode ? '#111827' : '#F3F4F6' }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: isDarkMode ? '#111827' : '#F3F4F6',
+      }}
+    >
       <ScrollView contentContainerStyle={{ paddingBottom: hp(5) }}>
         <Box
           borderRadius="2xl"
@@ -32,7 +53,7 @@ const ResumeUpload = ({ navigation }) => {
         >
           <VStack space={4} alignItems="center">
             <Text
-              fontSize={24}
+              fontSize="2xl"
               fontWeight="bold"
               color={isDarkMode ? '#F3F4F6' : '#111827'}
               textAlign="center"
@@ -46,7 +67,7 @@ const ResumeUpload = ({ navigation }) => {
               p={6}
               borderRadius="md"
               alignItems="center"
-              width="100%"
+              w="100%"
               _pressed={{ bg: isDarkMode ? '#4B5563' : '#9CA3AF' }}
             >
               <Icon
@@ -56,7 +77,7 @@ const ResumeUpload = ({ navigation }) => {
                 color={isDarkMode ? '#E5E7EB' : '#374151'}
               />
               <Text
-                fontSize={18}
+                fontSize="lg"
                 mt={3}
                 fontWeight="medium"
                 color={isDarkMode ? '#E5E7EB' : '#374151'}
@@ -65,8 +86,19 @@ const ResumeUpload = ({ navigation }) => {
               </Text>
             </Pressable>
 
+            {file && (
+              <Text
+                mt={2}
+                fontSize="sm"
+                color={isDarkMode ? '#9CA3AF' : '#374151'}
+                textAlign="center"
+              >
+                Selected: {file.name || 'Unnamed file'}
+              </Text>
+            )}
+
             <Text
-              fontSize={14}
+              fontSize="sm"
               textAlign="center"
               color={isDarkMode ? '#9CA3AF' : '#6B7280'}
             >

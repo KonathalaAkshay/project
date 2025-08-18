@@ -40,6 +40,8 @@ const VerifyOTP = ({ route, navigation }) => {
   };
 
   const handleSubmit = async () => {
+
+    //  navigation.navigate('ResumeUpload')
     const error = validateForm();
     if (error) {
       Alert.alert('Validation Error', error);
@@ -64,7 +66,7 @@ const VerifyOTP = ({ route, navigation }) => {
 
       if (response.status === 200) {
         Alert.alert('Success', 'Account verified successfully!', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') },
+          { text: 'OK', onPress: () => navigation.navigate('ResumeUpload') },
         ]);
       } else {
         Alert.alert('Error', 'Verification failed. Please try again.');
