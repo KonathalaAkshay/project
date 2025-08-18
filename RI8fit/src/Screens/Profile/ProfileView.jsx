@@ -13,7 +13,7 @@ import {
 import { StyleSheet, Dimensions, useColorScheme } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-import BottomNavBar from '../../Components/BottomNav';
+import BottomNavBar from '../../Components/NavBar/BottomNav';
 
 const { width, height } = Dimensions.get('window');
 
