@@ -15,8 +15,7 @@ import {
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
 import api from '../../API/api'; // Axios instance
-import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
-import GoogleIcon from '../../Store/GoogleIcon';
+import GoogleIcon from '../../Store/GoogleIcon/GoogleIcon';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('akshay@gmail.com');
@@ -29,6 +28,7 @@ const Login = ({ navigation }) => {
       if (url || url.startsWith('RI8fit://auth')) {
         try {
           const urlObj = new URL(url);
+          
           // const success = urlObj.searchParams.get('success');
           // const userId = urlObj.searchParams.get('userId');
           // const token = urlObj.searchParams.get('token');

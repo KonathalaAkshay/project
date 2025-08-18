@@ -7,7 +7,7 @@ export const useFilePicker = () => {
   const pickFile = async () => {
     try {
       const results = await pick({
-        type: [types.pdf, types.plainText, types.doc, types.docx, types.allFiles],
+        type: [types.pdf, types.doc, types.docx],
       });
 
       if (results && results.length > 0) {
