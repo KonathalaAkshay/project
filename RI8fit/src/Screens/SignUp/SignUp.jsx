@@ -17,6 +17,12 @@ import {
   View,
 } from 'react-native';
 import api from '../../API/api';
+import {
+  setItem,
+  ACCESS_TOKEN,
+  REFRESH_TOKEN,
+  AUTH_DETAILS,
+} from '../../Utils/helper';
 
 const SignUp = ({ navigation }) => {
   const { width, height } = useWindowDimensions();
@@ -67,38 +73,49 @@ const SignUp = ({ navigation }) => {
 
     setIsSubmitting(true);
     try {
-      // build query string using URLSearchParams
-      const params = new URLSearchParams({
-        email,
-        password,
-        confirm_password: confirmPassword,
-        phone_no: phone,
+      const response = await api.post('/auth/candidate/signup', null, {
+        params: {
+          email,
+          password,
+          confirm_password: confirmPassword,
+          phone_no: phone,
+        },
       });
 
-      const response = await api.post(
-        `/auth/candidate/signup?${params.toString()}`,
-      );
+      if (response.status === 200 || response.data.success === true) {
+        const { access_token, refresh_token } = response.data || {};
 
-      if (response.status === 200) {
+        // ✅ Store tokens in storage
+        await setItem(ACCESS_TOKEN, access_token);
+        await setItem(REFRESH_TOKEN, refresh_token);
+        await setItem(AUTH_DETAILS, JSON.stringify(response.data));
+
         setAccountCreated(true);
+
         setTimeout(() => {
           setAccountCreated(false);
           setEmail('');
           setPhone('');
           setPassword('');
           setConfirmPassword('');
-          navigation.navigate('VerifyOTP', { email });
+
+          navigation.navigate('VerifyOTP', {
+            token: access_token,
+          });
         }, 500);
+      } else {
+        Alert.alert('Error', response.data.message || 'Something went wrong');
       }
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        Alert.alert('Error', "Email already exists. Please try another.");
+      if (error.response?.status === 400) {
+        Alert.alert('Error', 'Email already exists. Please try another.');
+      } else {
+        Alert.alert(
+          'Error',
+          error.response?.data?.message ||
+            'Failed to create account. Please try again.',
+        );
       }
-      Alert.alert(
-        'Error',
-        error.response?.data?.message ||
-          'Failed to create account. Please try again.',
-      );
     } finally {
       setIsSubmitting(false);
     }

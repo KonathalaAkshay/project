@@ -15,6 +15,7 @@ import { PaperProvider } from 'react-native-paper';
 import { NativeBaseProvider } from 'native-base';
 import Resume from '../Screens/Register/Resume';
 import VerifyOTP from '../Screens/SignUp/VerifyOTP';
+import { UserProvider } from '../Context/UserContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,32 +23,40 @@ const AppNavigator = () => {
   return (
     <PaperProvider>
       <NativeBaseProvider>
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen
-            name="Login"
-            component={Login}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="HomeCard"
-            component={HomeCard}
-            options={{
-              title: 'Home', 
-              headerShown: true, 
-            }}
-          />
-          <Stack.Screen name="Profile" component={Profile} />
-          <Stack.Screen name="SignUp" component={SignUp} />
-          <Stack.Screen name="SkillsPage" component={SkillsPage} />
-          <Stack.Screen name="ResumeUpload" component={ResumeUpload} />
-          <Stack.Screen name="Education" component={Education} />
-          <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="BasicDetails" component={BasicDetails} />
-          <Stack.Screen name="EmploymentDetail" component={EmploymentDetail} />
-          <Stack.Screen name="EducationDetails" component={EducationDetails} />
-          <Stack.Screen name="Resume" component={Resume} />
-          <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
-        </Stack.Navigator>
+        <UserProvider>
+          <Stack.Navigator initialRouteName="Login">
+            <Stack.Screen
+              name="Login"
+              component={Login}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="HomeCard"
+              component={HomeCard}
+              options={{
+                title: 'Home',
+                headerShown: true,
+              }}
+            />
+            <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="SignUp" component={SignUp} />
+            <Stack.Screen name="SkillsPage" component={SkillsPage} />
+            <Stack.Screen name="ResumeUpload" component={ResumeUpload} />
+            <Stack.Screen name="Education" component={Education} />
+            <Stack.Screen name="Register" component={Register} />
+            <Stack.Screen name="BasicDetails" component={BasicDetails} />
+            <Stack.Screen
+              name="EmploymentDetail"
+              component={EmploymentDetail}
+            />
+            <Stack.Screen
+              name="EducationDetails"
+              component={EducationDetails}
+            />
+            <Stack.Screen name="Resume" component={Resume} />
+            <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
+          </Stack.Navigator>
+        </UserProvider>
       </NativeBaseProvider>
     </PaperProvider>
   );

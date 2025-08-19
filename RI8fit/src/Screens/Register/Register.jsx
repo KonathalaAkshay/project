@@ -23,6 +23,7 @@ import { StyleSheet, Platform } from 'react-native';
 import axios from 'axios';
 import { useFilePicker } from '../../Components/ResumeUplod/FileUpload';
 import { useImagePicker } from '../../Components/ImageUpload/ImagePicker';
+import { UserContext } from '../../Context/UserContext';
 
 // import FilePickerManager from 'react-native-file-picker';
 
@@ -30,13 +31,15 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
   const { file, pickFile } = useFilePicker();
   const { image, pickImage } = useImagePicker();
 
+  const { email, phone, setEmail, setPhone } = useContext(UserContext);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    phoneNumber: '',
+    phoneNumber: { phone },
     workStatus: '',
   });
-  const [email, setEmail] = useState('');
+  // const [email, setEmail] = useState('');
   const [resumeFile, setResumeFile] = useState(null);
   const handleUpload = async () => {
     try {
@@ -199,8 +202,8 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
                 label="Email"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
+                value={email} 
+                disabled // ✅ makes it read-only
                 left={
                   <TextInput.Icon
                     icon={() => <MaterialIcons name="email" size={20} />}
@@ -212,15 +215,15 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
               </FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Phone Number */}
-            <FormControl isRequired isInvalid={isInvalidPhone}>
+            {/* Phone */}
+            <FormControl isRequired isInvalid={isInvalidPhone} mt={4}>
               <FormControl.Label>Phone Number</FormControl.Label>
               <TextInput
                 mode="outlined"
                 label="Phone Number"
                 keyboardType="phone-pad"
-                value={formData.phoneNumber}
-                onChangeText={val => handleInputChange('phoneNumber', val)}
+                value={phone} 
+                disabled // ✅ makes it read-only
                 left={
                   <TextInput.Icon
                     icon={() => <MaterialIcons name="phone" size={20} />}
@@ -261,13 +264,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
             </FormControl>
 
             {/* Resume Upload */}
-            <Box
-              borderRadius="2xl"
-              p={2}
-              mt={2}
-              mb={2}
-              bg="#F9FAFB"
-            >
+            <Box borderRadius="2xl" p={2} mt={2} mb={2} bg="#F9FAFB">
               <VStack space={4} alignItems="center">
                 <Pressable
                   onPress={handleUpload}
@@ -284,7 +281,12 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
                     size="xl"
                     color="#374151"
                   />
-                  <Text fontSize="lg" mt={3} fontWeight="medium" color="#374151">
+                  <Text
+                    fontSize="lg"
+                    mt={3}
+                    fontWeight="medium"
+                    color="#374151"
+                  >
                     Upload Your Resume
                   </Text>
                 </Pressable>
@@ -298,13 +300,7 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
             </Box>
 
             {/* Image Upload */}
-            <Box
-              borderRadius="2xl"
-              p={4}
-              mt={2}
-              mb={4}
-              bg="#F9FAFB"
-            >
+            <Box borderRadius="2xl" p={4} mt={2} mb={4} bg="#F9FAFB">
               <VStack space={4} alignItems="center">
                 <Pressable
                   onPress={handleImageUpload}
@@ -321,7 +317,12 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
                     size="xl"
                     color="#374151"
                   />
-                  <Text fontSize="lg" mt={3} fontWeight="medium" color="#374151">
+                  <Text
+                    fontSize="lg"
+                    mt={3}
+                    fontWeight="medium"
+                    color="#374151"
+                  >
                     Upload Your Image
                   </Text>
                 </Pressable>

@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import OpenScreen from './src/Screens/OpenScreen/OpenScreen';
 import AppNavigator from './src/Navigation/AppNavigation';
-import Register from './src/Screens/Register/Register';
+// import Register from './src/Screens/Register/Register';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -27,7 +27,7 @@ export default function App() {
   return (
     <NativeBaseProvider theme={theme}>
       <NavigationContainer theme={isDarkMode ? DarkTheme : DefaultTheme}>
-        {showSplash ? <OpenScreen /> : <Register />}
+        {showSplash ? <OpenScreen /> : <AppNavigator />}
       </NavigationContainer>
     </NativeBaseProvider>
   );

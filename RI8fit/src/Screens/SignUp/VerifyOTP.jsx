@@ -16,11 +16,11 @@ import {
   MD3LightTheme,
   MD3DarkTheme,
 } from 'react-native-paper';
-import api from '../../API/api'; // your axios instance
+import api from '../../API/api'; // axios instance
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
 
 const VerifyOTP = ({ route, navigation }) => {
-  const { email } = route.params;
   const { width, height } = useWindowDimensions();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
@@ -39,60 +39,49 @@ const VerifyOTP = ({ route, navigation }) => {
   };
 
   const [otp, setOtp] = useState('');
-  // const [phone, setPhone] = useState('');
-  // const [password, setPassword] = useState('');
-  // const [confirmPassword, setConfirmPassword] = useState('');
-  // const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     if (!otp.trim()) return 'OTP is required';
-    // if (!phone.trim() || phone.length < 10)
-    //   return 'Valid phone number is required';
-    // if (!password.trim() || password.length < 6)
-    //   return 'Password must be at least 6 characters';
-    // if (password !== confirmPassword) return 'Passwords do not match';
-    // return null;
   };
 
   const handleSubmit = async () => {
-    navigation.navigate('Register');
-    // const error = validateForm();
-    // if (error) {
-    //   Alert.alert('Validation Error', error);
-    //   return;
-    // }
+    const error = validateForm();
+    if (error) {
+      Alert.alert('Validation Error', error);
+      return;
+    }
 
-    // setIsSubmitting(true);
-    // try {
-    //   const response = await api.post(
-    //     `/auth/candidate/verify-otp`,
-    //     {},
-    //     {
-    //       params: {
-    //         email,
-    //         otp,
-    //         phone_no: phone,
-    //         password,
-    //         confirm_password: confirmPassword,
-    //       },
-    //     },
-    //   );
+    setIsSubmitting(true);
+    try {
+      const accessToken = await getItem(ACCESS_TOKEN);
 
-    //   if (response.status === 200) {
-    //     Alert.alert('Success', 'Account verified successfully!', [
-    //       { text: 'OK', onPress: () => navigation.navigate('ResumeUpload') },
-    //     ]);
-    //   } else {
-    //     Alert.alert('Error', 'Verification failed. Please try again.');
-    //   }
-    // } catch (err) {
-    //   Alert.alert(
-    //     'Error',
-    //     err.response?.data?.message || 'Something went wrong.',
-    //   );
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+      const response = await api.post(
+        '/auth/candidate/verify-otp',
+        {}, // no body
+        {
+          params: { otp },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      if (response.status === 200) {
+        Alert.alert('Success', 'Account verified successfully!', [
+          { text: 'OK', onPress: () => navigation.navigate('Register') },
+        ]);
+      } else {
+        Alert.alert('Error', 'Verification failed. Please try again.');
+      }
+    } catch (err) {
+      Alert.alert(
+        'Error',
+        err.response?.data?.message || 'Something went wrong.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,32 +105,10 @@ const VerifyOTP = ({ route, navigation }) => {
               mb={4}
               color={isDarkMode ? '#F3F4F6' : '#111827'}
             >
-              Complete Sign Up
+              Complete OTP Verification
             </Text>
 
             <VStack space={hp(2)}>
-              {/* Email */}
-              {/* <FormControl>
-                <FormControl.Label>Email</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  value={email || ''}
-                  disabled
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="email"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-              </FormControl> */}
-
               {/* OTP */}
               <FormControl isRequired>
                 <FormControl.Label>OTP</FormControl.Label>
@@ -151,7 +118,6 @@ const VerifyOTP = ({ route, navigation }) => {
                   value={otp}
                   keyboardType="number-pad"
                   onChangeText={setOtp}
-                  //left={<TextInput.Icon icon="numeric" />}
                   left={
                     <TextInput.Icon
                       icon={() => (
@@ -166,81 +132,6 @@ const VerifyOTP = ({ route, navigation }) => {
                   style={styles.textInput}
                 />
               </FormControl>
-
-              {/* Phone Number */}
-              {/* <FormControl isRequired>
-                <FormControl.Label>Phone Number</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter phone number"
-                  value={phone}
-                  keyboardType="phone-pad"
-                  onChangeText={setPhone}
-                  // left={<TextInput.Icon icon="phone" />}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="phone"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-              </FormControl> */}
-
-              {/* Password */}
-              {/* <FormControl isRequired>
-                <FormControl.Label>Password</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Enter password"
-                  value={password}
-                  secureTextEntry
-                  onChangeText={setPassword}
-                  // left={<TextInput.Icon icon="lock" />}
-                  left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="lock"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-              </FormControl> */}
-
-              {/* Confirm Password */}
-              {/* <FormControl isRequired>
-                <FormControl.Label>Confirm Password</FormControl.Label>
-                <TextInput
-                  mode="outlined"
-                  placeholder="Re-enter password"
-                  value={confirmPassword}
-                  secureTextEntry
-                  onChangeText={setConfirmPassword}
-                  // left={<TextInput.Icon icon="lock-check" />}
-                   left={
-                    <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons
-                          name="lock"
-                          size={20}
-                          color={isDarkMode ? '#F3F4F6' : '#111827'}
-                        />
-                      )}
-                    />
-                  }
-                  style={styles.textInput}
-                />
-              </FormControl> */}
 
               {/* Submit */}
               <Button
