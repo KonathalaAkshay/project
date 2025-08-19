@@ -39,23 +39,23 @@ const VerifyOTP = ({ route, navigation }) => {
   };
 
   const [otp, setOtp] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [phone, setPhone] = useState('');
+  // const [password, setPassword] = useState('');
+  // const [confirmPassword, setConfirmPassword] = useState('');
+  // const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     if (!otp.trim()) return 'OTP is required';
-    if (!phone.trim() || phone.length < 10)
-      return 'Valid phone number is required';
-    if (!password.trim() || password.length < 6)
-      return 'Password must be at least 6 characters';
-    if (password !== confirmPassword) return 'Passwords do not match';
-    return null;
+    // if (!phone.trim() || phone.length < 10)
+    //   return 'Valid phone number is required';
+    // if (!password.trim() || password.length < 6)
+    //   return 'Password must be at least 6 characters';
+    // if (password !== confirmPassword) return 'Passwords do not match';
+    // return null;
   };
 
   const handleSubmit = async () => {
-     navigation.navigate('ResumeUpload')
+    navigation.navigate('Register');
     // const error = validateForm();
     // if (error) {
     //   Alert.alert('Validation Error', error);
@@ -121,7 +121,7 @@ const VerifyOTP = ({ route, navigation }) => {
 
             <VStack space={hp(2)}>
               {/* Email */}
-              <FormControl>
+              {/* <FormControl>
                 <FormControl.Label>Email</FormControl.Label>
                 <TextInput
                   mode="outlined"
@@ -140,7 +140,7 @@ const VerifyOTP = ({ route, navigation }) => {
                   }
                   style={styles.textInput}
                 />
-              </FormControl>
+              </FormControl> */}
 
               {/* OTP */}
               <FormControl isRequired>
@@ -168,7 +168,7 @@ const VerifyOTP = ({ route, navigation }) => {
               </FormControl>
 
               {/* Phone Number */}
-              <FormControl isRequired>
+              {/* <FormControl isRequired>
                 <FormControl.Label>Phone Number</FormControl.Label>
                 <TextInput
                   mode="outlined"
@@ -190,10 +190,10 @@ const VerifyOTP = ({ route, navigation }) => {
                   }
                   style={styles.textInput}
                 />
-              </FormControl>
+              </FormControl> */}
 
               {/* Password */}
-              <FormControl isRequired>
+              {/* <FormControl isRequired>
                 <FormControl.Label>Password</FormControl.Label>
                 <TextInput
                   mode="outlined"
@@ -215,10 +215,10 @@ const VerifyOTP = ({ route, navigation }) => {
                   }
                   style={styles.textInput}
                 />
-              </FormControl>
+              </FormControl> */}
 
               {/* Confirm Password */}
-              <FormControl isRequired>
+              {/* <FormControl isRequired>
                 <FormControl.Label>Confirm Password</FormControl.Label>
                 <TextInput
                   mode="outlined"
@@ -240,7 +240,7 @@ const VerifyOTP = ({ route, navigation }) => {
                   }
                   style={styles.textInput}
                 />
-              </FormControl>
+              </FormControl> */}
 
               {/* Submit */}
               <Button
