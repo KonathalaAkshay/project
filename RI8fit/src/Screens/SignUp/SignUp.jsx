@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { VStack, FormControl, Text, Box, ScrollView } from 'native-base';
 import {
   TextInput,
@@ -23,6 +23,7 @@ import {
   REFRESH_TOKEN,
   AUTH_DETAILS,
 } from '../../Utils/helper';
+import { UserContext } from '../../Context/UserContext';
 
 const SignUp = ({ navigation }) => {
   const { width, height } = useWindowDimensions();
@@ -42,8 +43,10 @@ const SignUp = ({ navigation }) => {
     },
   };
 
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const { email, setEmail, phone, setPhone } = useContext(UserContext);
+
+  // const [email, setEmail] = useState('');
+  // const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [accountCreated, setAccountCreated] = useState(false);
@@ -82,7 +85,7 @@ const SignUp = ({ navigation }) => {
         },
       });
 
-      if (response.status === 200 || response.data.success === true) {
+      if (response.data.status === 200 || response.data.success === true) {
         const { access_token, refresh_token } = response.data || {};
 
         // ✅ Store tokens in storage
@@ -94,8 +97,8 @@ const SignUp = ({ navigation }) => {
 
         setTimeout(() => {
           setAccountCreated(false);
-          setEmail('');
-          setPhone('');
+          // setEmail('');
+          // setPhone('');
           setPassword('');
           setConfirmPassword('');
 

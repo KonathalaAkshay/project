@@ -219,12 +219,12 @@ const ProfileView = () => {
             borderRadius="lg"
             alignItems="center"
           >
-            <Icon
+            {/* <Icon
               as={MaterialIcons}
               name="video-call"
               size="lg"
               color={isDarkMode ? '#D1D5DB' : '#4B5563'}
-            />
+            /> */}
             <Text
               fontSize="md"
               mt={2}
@@ -248,12 +248,12 @@ const ProfileView = () => {
             borderRadius="lg"
             alignItems="center"
           >
-            <Icon
+            {/* <Icon
               as={MaterialIcons}
               name="description"
               size="lg"
               color={isDarkMode ? '#D1D5DB' : '#4B5563'}
-            />
+            /> */}
             <Text
               fontSize="md"
               mt={2}
