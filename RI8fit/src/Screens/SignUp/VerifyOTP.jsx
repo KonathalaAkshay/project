@@ -98,6 +98,7 @@ const VerifyOTP = ({ route, navigation }) => {
             mt={4}
             bg={isDarkMode ? '#1F2937' : '#FFFFFF'}
             style={styles.box}
+            alignItems={'center'}
           >
             <Text
               fontSize={22}

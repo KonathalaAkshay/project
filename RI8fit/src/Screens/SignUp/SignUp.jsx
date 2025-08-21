@@ -47,8 +47,8 @@ const SignUp = ({ navigation }) => {
 
   // const [email, setEmail] = useState('');
   // const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState('Akshay');
+  const [confirmPassword, setConfirmPassword] = useState('Akshay');
   const [accountCreated, setAccountCreated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,8 +99,8 @@ const SignUp = ({ navigation }) => {
           setAccountCreated(false);
           // setEmail('');
           // setPhone('');
-          setPassword('');
-          setConfirmPassword('');
+          setPassword('Akshay');
+          setConfirmPassword('Akshay');
 
           navigation.navigate('VerifyOTP', {
             token: access_token,
