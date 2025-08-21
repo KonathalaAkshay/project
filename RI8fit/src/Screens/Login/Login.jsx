@@ -28,7 +28,7 @@ const Login = ({ navigation }) => {
       if (url || url.startsWith('RI8fit://auth')) {
         try {
           const urlObj = new URL(url);
-          
+
           // const success = urlObj.searchParams.get('success');
           // const userId = urlObj.searchParams.get('userId');
           // const token = urlObj.searchParams.get('token');
@@ -76,7 +76,7 @@ const Login = ({ navigation }) => {
 
   const handleLogin = () => {
     if (email === 'akshay@gmail.com' && password === '12345678') {
-      navigation.navigate('HomeCard');
+      navigation.navigate('EmploymentDetail');
     } else {
       toast.show({ description: 'Invalid credentials', bg: 'red.500' });
     }

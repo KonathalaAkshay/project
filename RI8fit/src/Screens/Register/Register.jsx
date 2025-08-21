@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   VStack,
   FormControl,
@@ -9,6 +9,8 @@ import {
   HStack,
   useToast,
   Button as NBButton,
+  Pressable,
+  Icon,
 } from 'native-base';
 import {
   TextInput,
@@ -17,94 +19,164 @@ import {
   MD3LightTheme,
 } from 'react-native-paper';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { StyleSheet, Platform } from 'react-native';
-import axios from 'axios';
-// import FilePickerManager from 'react-native-file-picker';
+import { StyleSheet } from 'react-native';
+import { useFilePicker } from '../../Components/ResumeUplod/FileUpload';
+import { useImagePicker } from '../../Components/ImageUpload/ImagePicker';
+import { UserContext } from '../../Context/UserContext';
+import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
+import { CandidateContext } from '../../Context/CandidateContext';
+import api from '../../API/api';
 
 const Register = ({ navigation = { navigate: () => {} } }) => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    workStatus: '',
-  });
-  const [email, setEmail] = useState('');
-  const [resumeFile, setResumeFile] = useState(null);
+  const { file, pickFile, resetFile } = useFilePicker();
+  const { image, pickImage, resetImage } = useImagePicker();
+
+  const { setCandidateData } = useContext(CandidateContext);
+
+  const { email, phone, setEmail, setPhone } = useContext(UserContext);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [firstName, setFirstName] = useState('A');
+  const [lastName, setLastName] = useState('K');
+  const [workStatus, setWorkStatus] = useState('');
   const toast = useToast();
 
-  const isInvalidEmail = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isInvalidPhone = formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber);
-
-  const handleInputChange = (key, value) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
-
   const validateForm = () => {
-    if (!formData.firstName.trim()) return 'First name is required';
-    if (!formData.lastName.trim()) return 'Last name is required';
-    if (!email.trim() || isInvalidEmail) return 'Valid email is required';
-    if (!formData.phoneNumber.trim() || isInvalidPhone) return 'Valid 10-digit phone number is required';
-    if (!formData.workStatus) return 'Work status is required';
-    if (!resumeFile) return 'Resume file is required';
+    if (!firstName.trim()) return 'First name is required';
+    if (!lastName.trim()) return 'Last name is required';
+    if (!workStatus) return 'Work status is required';
+    if (!file) return 'Resume file is required';
 
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(resumeFile.type)) return 'Only PDF, DOC, DOCX files are allowed';
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    if (!allowedTypes.includes(file.type))
+      return 'Only PDF, DOC, or DOCX files are allowed';
 
     return null;
   };
 
-  // const handleResumeUpload = () => {
-  //   FilePickerManager.showFilePicker(null, (response) => {
-  //     if (response.didCancel) return;
-  //     if (response.error) {
-  //       toast.show({ description: 'File selection failed.' });
-  //       return;
-  //     }
-
-  //     setResumeFile({
-  //       uri: Platform.OS === 'ios' ? response.uri.replace('file://', '') : response.uri,
-  //       name: response.fileName,
-  //       type: response.type,
-  //     });
-
-  //     toast.show({ description: `Resume selected: ${response.fileName}` });
-  //   });
-  // };
+  const verifyResumeUpload = async resumeUrl => {
+    try {
+      const response = await fetch(resumeUrl, { method: 'HEAD' }); // HEAD request to check existence without downloading
+      if (response.ok) {
+        console.log('✅ Resume file exists and is accessible at:', resumeUrl);
+        // Optionally show a toast: toast.show({ description: 'Resume verified successfully!' });
+        return true;
+      } else {
+        console.log(
+          '❌ Resume not found or inaccessible (Status:',
+          response.status,
+          ')',
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Verification error:', error.message);
+      return false;
+    }
+  };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
 
-    navigation.navigate('BasicDetails');
-    // const error = validateForm();
-    // if (error) {
-    //   toast.show({ description: error });
-    //   return;
-    // }
+    try {
+      const errorMessage = validateForm();
+      if (errorMessage) {
+        toast.show({ description: errorMessage });
+        return;
+      }
 
-    // try {
-    //   const data = new FormData();
-    //   data.append('firstName', formData.firstName);
-    //   data.append('lastName', formData.lastName);
-    //   data.append('email', email);
-    //   data.append('phoneNumber', formData.phoneNumber);
+      let formData = new FormData();
+      formData.append('first_name', firstName);
+      formData.append('last_name', lastName);
+      formData.append('phone_number', phone);
+      formData.append('work_status', workStatus);
 
-    //   const response = await axios.post('https://your-api-endpoint.com/register', data, {
-    //     headers: {
-    //       'Content-Type': 'multipart/form-data',
-    //     },
-    //   });
+      if (file) {
+        formData.append('resume', {
+          uri: file.uri,
+          type: 'application/pdf',
+          name: file.name,
+        });
+      }
 
-    //   if (response.status === 200 || response.status === 201) {
-    //     toast.show({ description: 'Account created successfully!' });
-    //     navigation.navigate('ResumeUpload');
+      if (image) {
+        formData.append('profile_image', {
+          uri: image.uri,
+          type: image.type || 'image/jpeg',
+          name: image.name || `profile_${Date.now()}.jpg`,
+        });
+      }
 
-    //     // Reset form
-    //     setFormData({ firstName: '', lastName: '', phoneNumber: '' });
-    //     setEmail('');
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   toast.show({ description: 'Failed to submit form. Please try again.' });
-    // }
+      const accessToken = await getItem(ACCESS_TOKEN);
+
+      const response = await fetch(
+        'https://dev-backend.invotrx.com/candidate/upload-resume-additional-details/',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formData,
+        },
+      );
+
+      // Early check for HTTP errors
+      if (!response.ok) {
+        // Read as text to handle non-JSON bodies safely
+        const errorText = await response.text();
+        console.error('❌ Server Error Response:', errorText);
+        throw new Error(
+          `Upload failed (Status ${response.status}): ${errorText.substring(
+            0,
+            200,
+          )}...`,
+        ); // Truncate for toast
+      }
+
+      // Check Content-Type before parsing as JSON
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const bodyText = await response.text();
+        throw new Error(
+          `Unexpected response type (${contentType}): ${bodyText.substring(
+            0,
+            200,
+          )}...`,
+        );
+      }
+
+      // Safe to parse now
+      const json = await response.json();
+
+      if (json.success) {
+        setCandidateData(json.data);
+
+        navigation.navigate('EducationDetails');
+
+        setFirstName('');
+        setLastName('');
+        setWorkStatus('');
+        setEmail('');
+        setPhone('');
+        resetFile?.();
+        resetImage?.();
+      } else {
+        throw new Error(json.message || 'Upload did not succeed');
+      }
+    } catch (error) {
+      console.error('❌ API Error (raw):', error);
+      console.log('🔎 Error message:', error.message);
+
+      toast.show({
+        description:
+          error.message || 'Failed to submit form. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -117,107 +189,181 @@ const Register = ({ navigation = { navigate: () => {} } }) => {
 
           <VStack space={4}>
             {/* First Name */}
-            <FormControl isRequired isInvalid={!formData.firstName.trim() && formData.firstName !== ''}>
-              <FormControl.Label>First Name</FormControl.Label>
+            <FormControl
+              isRequired
+              isInvalid={!firstName.trim() && firstName !== ''}
+            >
+              {/* <FormControl.Label>First Name</FormControl.Label> */}
               <TextInput
                 mode="outlined"
                 label="First Name"
-                value={formData.firstName}
-                onChangeText={val => handleInputChange('firstName', val)}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} />} />}
+                value={firstName}
+                onChangeText={setFirstName}
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialIcons name="person" size={20} />}
+                  />
+                }
               />
-              <FormControl.ErrorMessage>First name is required</FormControl.ErrorMessage>
+              <FormControl.ErrorMessage>
+                First name is required
+              </FormControl.ErrorMessage>
             </FormControl>
 
             {/* Last Name */}
-            <FormControl isRequired isInvalid={!formData.lastName.trim() && formData.lastName !== ''}>
-              <FormControl.Label>Last Name</FormControl.Label>
+            <FormControl
+              isRequired
+              isInvalid={!lastName.trim() && lastName !== ''}
+            >
+              {/* <FormControl.Label>Last Name</FormControl.Label> */}
               <TextInput
                 mode="outlined"
                 label="Last Name"
-                value={formData.lastName}
-                onChangeText={val => handleInputChange('lastName', val)}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} />} />}
+                value={lastName}
+                onChangeText={setLastName}
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialIcons name="person" size={20} />}
+                  />
+                }
               />
-              <FormControl.ErrorMessage>Last name is required</FormControl.ErrorMessage>
+              <FormControl.ErrorMessage>
+                Last name is required
+              </FormControl.ErrorMessage>
             </FormControl>
 
-            {/* Email */}
-            <FormControl isRequired isInvalid={isInvalidEmail}>
-              <FormControl.Label>Email</FormControl.Label>
-              <TextInput
-                mode="outlined"
-                label="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="email" size={20} />} />}
-              />
-              <FormControl.ErrorMessage>Valid email is required</FormControl.ErrorMessage>
-            </FormControl>
-
-            {/* Phone Number */}
-            <FormControl isRequired isInvalid={isInvalidPhone}>
-              <FormControl.Label>Phone Number</FormControl.Label>
+            {/* Phone */}
+            <FormControl>
+              {/* <FormControl.Label>Phone Number</FormControl.Label> */}
               <TextInput
                 mode="outlined"
                 label="Phone Number"
                 keyboardType="phone-pad"
-                value={formData.phoneNumber}
-                onChangeText={val => handleInputChange('phoneNumber', val)}
-                left={<TextInput.Icon icon={() => <MaterialIcons name="phone" size={20} />} />}
+                value={phone}
+                editable={false} // read-only
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialIcons name="phone" size={20} />}
+                  />
+                }
               />
-              <FormControl.ErrorMessage>Valid 10-digit phone number is required</FormControl.ErrorMessage>
             </FormControl>
 
             {/* Work Status */}
-            <FormControl isRequired isInvalid={!formData.workStatus}>
+            <FormControl isRequired isInvalid={!workStatus}>
               <FormControl.Label>Work Status</FormControl.Label>
               <HStack space={3}>
                 <NBButton
                   flex={1}
-                  variant={formData.workStatus === 'experienced' ? 'solid' : 'outline'}
-                  onPress={() => handleInputChange('workStatus', 'experienced')}
+                  variant={workStatus === 'experienced' ? 'solid' : 'outline'}
+                  onPress={() => setWorkStatus('experienced')}
                 >
                   I'm Experienced
                 </NBButton>
                 <NBButton
                   flex={1}
-                  variant={formData.workStatus === 'fresher' ? 'solid' : 'outline'}
-                  onPress={() => handleInputChange('workStatus', 'fresher')}
+                  variant={workStatus === 'fresher' ? 'solid' : 'outline'}
+                  onPress={() => setWorkStatus('fresher')}
                 >
                   I'm a Fresher
                 </NBButton>
               </HStack>
-              <FormControl.ErrorMessage>Work status is required</FormControl.ErrorMessage>
+              <FormControl.ErrorMessage>
+                Work status is required
+              </FormControl.ErrorMessage>
             </FormControl>
 
             {/* Resume Upload */}
-            {/* <FormControl isRequired isInvalid={!resumeFile}>
-              <FormControl.Label>Upload Resume</FormControl.Label>
-              <Button
-                mode="outlined"
-                icon="upload"
-                // onPress={handleResumeUpload}
-              >
-                {resumeFile ? 'Change Resume' : 'Upload Resume'}
-              </Button>
-              {resumeFile && (
-                <Text fontSize="xs" mt="2" color="gray.500">
-                  Selected: {resumeFile.name}
-                </Text>
-              )}
-              {!resumeFile && (
-                <FormControl.ErrorMessage>Resume file is required</FormControl.ErrorMessage>
-              )}
-            </FormControl> */}
+            <HStack space={4} mt={4} w="100%">
+              {/* Resume Upload */}
+              <Box flex={1} borderRadius="2xl" p={4} bg="white" shadow={2}>
+                <VStack space={3} alignItems="center" justifyContent="center">
+                  <Pressable
+                    onPress={pickFile}
+                    bg="#F3F4F6"
+                    p={6}
+                    borderRadius="xl"
+                    alignItems="center"
+                    justifyContent="center"
+                    w="100%"
+                    _pressed={{ bg: '#E5E7EB' }}
+                  >
+                    <Icon
+                      as={MaterialIcons}
+                      name="upload-file"
+                      size="2xl"
+                      color="#374151"
+                    />
+                    <Text fontSize="sm" mt={2} color="#374151">
+                      UploadResume
+                    </Text>
+                  </Pressable>
+
+                  {file && (
+                    <Text
+                      fontSize="xs"
+                      color="#4B5563"
+                      textAlign="center"
+                      mt={2}
+                      numberOfLines={1}
+                    >
+                      📄 {file.name || 'Unnamed file'}
+                    </Text>
+                  )}
+                </VStack>
+              </Box>
+
+              {/* Image Upload */}
+              <Box flex={1} borderRadius="2xl" p={4} bg="white" shadow={2}>
+                <VStack space={3} alignItems="center" justifyContent="center">
+                  <Pressable
+                    onPress={pickImage}
+                    bg="#F3F4F6"
+                    p={6}
+                    borderRadius="xl"
+                    alignItems="center"
+                    justifyContent="center"
+                    w="100%"
+                    _pressed={{ bg: '#E5E7EB' }}
+                  >
+                    <Icon
+                      as={MaterialIcons}
+                      name="image"
+                      size="2xl"
+                      color="#374151"
+                    />
+                    <Text fontSize="sm" mt={2} color="#374151">
+                      Upload Image
+                    </Text>
+                  </Pressable>
+
+                  {image && (
+                    <Text
+                      fontSize="xs"
+                      color="#4B5563"
+                      textAlign="center"
+                      mt={2}
+                      numberOfLines={1}
+                    >
+                      🖼️ {image.name || 'Unnamed image'}
+                    </Text>
+                  )}
+                </VStack>
+              </Box>
+            </HStack>
 
             {/* Submit Button */}
             <Button
-              mode="contained"
               onPress={handleSubmit}
-              style={{ marginTop: 20 }}
+              mode="contained"
+              style={styles.submitButton}
+              labelStyle={{
+                // fontSize: wp(4.5),
+                fontWeight: 'bold',
+                color: '#FFFFFF',
+              }}
+              disabled={isSubmitting}
+              loading={isSubmitting}
             >
               Submit
             </Button>
@@ -237,5 +383,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  submitButton: {
+    marginTop: 20,
+    backgroundColor: '#1aa1f0ff',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 });

@@ -1,170 +1,394 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import { Box } from 'native-base';
-import { TextInput, Menu, Button, Text } from 'react-native-paper';
-import { DatePickerModal } from 'react-native-paper-dates';
+/* eslint-disable react-native/no-inline-styles */
+import { ScrollView, Box, Button, HStack, Icon } from 'native-base';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import {
+  Text,
+  TextInput,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  useColorScheme,
+  View,
+} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { CandidateContext } from '../../Context/CandidateContext';
 
-export default function EducationDetails({ navigation = { navigate: () => {} } }) {
-  // Dropdown data arrays
-  const qualifications = ['High School', 'Diploma', 'Bachelors', 'Masters', 'PhD'];
-  const courses = ['Computer Science', 'Mechanical', 'Civil', 'Electrical', 'Management'];
-  const courseTypes = ['Full Time', 'Part Time', 'Distance Learning'];
-  const specializations = ['AI', 'Data Science', 'Networking', 'Marketing', 'Finance'];
-  const universities = ['Harvard', 'MIT', 'Stanford', 'Oxford', 'IIT Delhi'];
+const EducationDetails = ({ navigation }) => {
+  const { candidateData, setCandidateData } = useContext(CandidateContext);
 
-  // State
+  const [educationList, setEducationList] = useState([]);
   const [qualification, setQualification] = useState('');
-  const [course, setCourse] = useState('');
-  const [courseType, setCourseType] = useState('');
-  const [specialization, setSpecialization] = useState('');
-  const [university, setUniversity] = useState('');
-  const [startYear, setStartYear] = useState(null);
-  const [endYear, setEndYear] = useState(null);
+  const [institution, setInstitution] = useState('');
+  const [year, setYear] = useState('');
+  const [editingId, setEditingId] = useState(null); // ✅ for edit mode
 
-  // Menu states
-  const [menu, setMenu] = useState({
-    qualification: false,
-    course: false,
-    courseType: false,
-    specialization: false,
-    university: false,
-  });
+  const scrollRef = useRef(null);
+  const { width, height } = Dimensions.get('window');
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
+  const wp = percentage => (width * percentage) / 100;
+  const hp = percentage => (height * percentage) / 100;
 
-  // Date picker states
-  const [startPickerVisible, setStartPickerVisible] = useState(false);
-  const [endPickerVisible, setEndPickerVisible] = useState(false);
+  const isValidYear = /^\d{4}$/.test(year);
 
-  // Submit handler
-  const handleSubmit = () => {
-    const formData = {
-      qualification,
-      course,
-      courseType,
-      specialization,
-      university,
-      startYear,
-      endYear,
-    };
-    // console.log('Form Data:', formData);
+  // ✅ Load education only once
+  useEffect(() => {
+    if (
+      candidateData?.resume_data?.education?.length &&
+      educationList.length === 0
+    ) {
+      const mappedEducation = candidateData.resume_data.education.map(
+        (edu, idx) => ({
+          id: `${idx}-${edu.course}`,
+          qualification: edu.course,
+          institution: edu.university,
+          year: edu.year,
+        }),
+      );
+      setEducationList(mappedEducation);
+      setCandidateData(prev => ({
+        ...prev,
+        education: mappedEducation,
+      }));
+    }
+  }, [candidateData]);
 
-    // Navigate and pass form data
-    navigation.navigate('Resume', { educationDetails: formData });
+  const handleAddOrUpdate = () => {
+    if (qualification.trim() && institution.trim() && isValidYear) {
+      if (editingId) {
+        // ✅ Update existing entry
+        const updatedList = educationList.map(item =>
+          item.id === editingId
+            ? {
+                ...item,
+                qualification: qualification.trim(),
+                institution: institution.trim(),
+                year,
+              }
+            : item,
+        );
+        setEducationList(updatedList);
+        setCandidateData(prev => ({ ...prev, education: updatedList }));
+        setEditingId(null);
+      } else {
+        // ✅ Add new entry
+        const newEducation = {
+          id: Date.now().toString(),
+          qualification: qualification.trim(),
+          institution: institution.trim(),
+          year,
+        };
+        const updatedList = [...educationList, newEducation];
+        setEducationList(updatedList);
+        setCandidateData(prev => ({ ...prev, education: updatedList }));
+        setTimeout(
+          () => scrollRef.current?.scrollToEnd({ animated: true }),
+          100,
+        );
+      }
+
+      // Reset form
+      setQualification('');
+      setInstitution('');
+      setYear('');
+    } else {
+      Alert.alert(
+        'Invalid Input',
+        'Please fill all fields and ensure year is a 4-digit number.',
+      );
+    }
   };
 
-  // Dropdown reusable renderer
-  const renderDropdown = (label, value, setValue, array, menuKey) => (
-    <Menu
-      visible={menu[menuKey]}
-      onDismiss={() => setMenu(prev => ({ ...prev, [menuKey]: false }))}
-      anchor={
-        <TouchableOpacity
-          onPress={() => setMenu(prev => ({ ...prev, [menuKey]: true }))}
-        >
-          <TextInput
-            label={label}
-            value={value}
-            editable={false}
-            style={styles.input}
-            right={<TextInput.Icon icon={() => <MaterialIcons name="arrow-drop-down" size={24} />} />}
-          />
-        </TouchableOpacity>
-      }
+  const handleDeleteEducation = id => {
+    const updatedList = educationList.filter(item => item.id !== id);
+    setEducationList(updatedList);
+    setCandidateData(prev => ({ ...prev, education: updatedList }));
+
+    if (editingId === id) {
+      // if deleting the one being edited
+      setEditingId(null);
+      setQualification('');
+      setInstitution('');
+      setYear('');
+    }
+  };
+
+  const handleEditEducation = item => {
+    setEditingId(item.id);
+    setQualification(item.qualification);
+    setInstitution(item.institution);
+    setYear(item.year);
+  };
+
+  const handleSubmit = () => {
+    setCandidateData(prev => ({
+      ...prev,
+      education: educationList,
+    }));
+    navigation.navigate('EmploymentDetail');
+  };
+
+  const renderEducationItem = ({ item }) => (
+    <Box
+      style={[
+        styles.educationItem,
+        {
+          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+          shadowColor: isDarkMode ? '#000' : '#ccc',
+        },
+      ]}
     >
-      {array.map((item, idx) => (
-        <Menu.Item
-          key={idx}
-          onPress={() => {
-            setValue(item);
-            setMenu(prev => ({ ...prev, [menuKey]: false }));
-          }}
-          title={item}
-        />
-      ))}
-    </Menu>
+      <Text
+        style={[
+          styles.educationText,
+          { color: isDarkMode ? '#F3F4F6' : '#111827' },
+        ]}
+      >
+        🎓 {item.qualification}
+      </Text>
+      <Text
+        style={[
+          styles.educationText,
+          { color: isDarkMode ? '#F3F4F6' : '#374151' },
+        ]}
+      >
+        🏫 {item.institution}
+      </Text>
+      <Text
+        style={[
+          styles.educationText,
+          { color: isDarkMode ? '#F3F4F6' : '#6B7280' },
+        ]}
+      >
+        📅 {item.year}
+      </Text>
+
+      <HStack space={3} mt={3}>
+        <Button
+          size="sm"
+          colorScheme="blue"
+          leftIcon={<Icon as={MaterialIcons} name="edit" size="sm" />}
+          onPress={() => handleEditEducation(item)}
+          borderRadius="lg"
+        >
+          Edit
+        </Button>
+        <Button
+          size="sm"
+          colorScheme="red"
+          leftIcon={<Icon as={MaterialIcons} name="delete" size="sm" />}
+          onPress={() => handleDeleteEducation(item.id)}
+          borderRadius="lg"
+        >
+          Delete
+        </Button>
+      </HStack>
+    </Box>
   );
 
   return (
-    <Box bg="white" p={4} borderRadius="2xl" shadow={3} style={styles.container}>
-      <Text style={styles.header}>Education Details</Text>
-
-      {renderDropdown('Qualification', qualification, setQualification, qualifications, 'qualification')}
-      {renderDropdown('Course', course, setCourse, courses, 'course')}
-      {renderDropdown('Course Type', courseType, setCourseType, courseTypes, 'courseType')}
-      {renderDropdown('Specialization', specialization, setSpecialization, specializations, 'specialization')}
-      {renderDropdown('University', university, setUniversity, universities, 'university')}
-
-      {/* Starting Year */}
-      <TouchableOpacity onPress={() => setStartPickerVisible(true)}>
-        <TextInput
-          label="Starting Year"
-          value={startYear ? startYear.toString() : ''}
-          editable={false}
-          style={styles.input}
-          right={<TextInput.Icon icon={() => <MaterialIcons name="calendar-today" size={20} />} />}
-        />
-      </TouchableOpacity>
-      <DatePickerModal
-        mode="single"
-        visible={startPickerVisible}
-        onDismiss={() => setStartPickerVisible(false)}
-        date={startYear ? new Date(startYear, 0, 1) : undefined}
-        onConfirm={params => {
-          setStartYear(params.date.getFullYear());
-          setStartPickerVisible(false);
-        }}
-      />
-
-      {/* Ending Year */}
-      <TouchableOpacity onPress={() => setEndPickerVisible(true)}>
-        <TextInput
-          label="Ending Year"
-          value={endYear ? endYear.toString() : ''}
-          editable={false}
-          style={styles.input}
-          right={<TextInput.Icon icon={() => <MaterialIcons name="calendar-today" size={20} />} />}
-        />
-      </TouchableOpacity>
-      <DatePickerModal
-        mode="single"
-        visible={endPickerVisible}
-        onDismiss={() => setEndPickerVisible(false)}
-        date={endYear ? new Date(endYear, 0, 1) : undefined}
-        onConfirm={params => {
-          setEndYear(params.date.getFullYear());
-          setEndPickerVisible(false);
-        }}
-      />
-
-      {/* Save Button */}
-      <Button
-        mode="contained"
-        style={styles.button}
-        icon={() => <MaterialIcons name="save" size={20} color="white" />}
-        onPress={handleSubmit}
+    <View
+      style={{ flex: 1, backgroundColor: isDarkMode ? '#111827' : '#F3F4F6' }}
+    >
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={{ paddingBottom: hp(5) }}
       >
-        Save And Next
-      </Button>
-    </Box>
+        {/* Card for Education Form */}
+        <Box
+          borderRadius="2xl"
+          p={wp(5)}
+          mb={hp(2)}
+          style={[
+            styles.boxShadow,
+            { backgroundColor: isDarkMode ? '#1F2937' : '#fff' },
+          ]}
+          mt={5}
+        >
+          <Text
+            style={[
+              styles.title,
+              { color: isDarkMode ? '#F3F4F6' : '#111827' },
+            ]}
+          >
+            {editingId ? 'Edit Education' : 'Add Education'}
+          </Text>
+
+          {/* Qualification */}
+          <Text
+            style={[
+              styles.label,
+              { color: isDarkMode ? '#E5E7EB' : '#23272e' },
+            ]}
+          >
+            Qualification
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDarkMode ? '#23272e' : '#fff',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
+              },
+            ]}
+            placeholder="e.g., B.Sc Computer Science"
+            placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+            value={qualification}
+            onChangeText={text => setQualification(text.trimStart())}
+          />
+
+          {/* Institution */}
+          <Text
+            style={[
+              styles.label,
+              { color: isDarkMode ? '#E5E7EB' : '#23272e' },
+            ]}
+          >
+            Institution
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDarkMode ? '#23272e' : '#fff',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
+              },
+            ]}
+            placeholder="e.g., XYZ University"
+            placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+            value={institution}
+            onChangeText={text => setInstitution(text.trimStart())}
+          />
+
+          {/* Year */}
+          <Text
+            style={[
+              styles.label,
+              { color: isDarkMode ? '#E5E7EB' : '#23272e' },
+            ]}
+          >
+            Year
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: isDarkMode ? '#23272e' : '#fff',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
+              },
+            ]}
+            placeholder="e.g., 2023"
+            placeholderTextColor={isDarkMode ? '#9CA3AF' : '#6B7280'}
+            value={year}
+            onChangeText={setYear}
+            keyboardType="numeric"
+            maxLength={4}
+          />
+
+          {/* Add / Update Button */}
+          <Button
+            onPress={handleAddOrUpdate}
+            mt={4}
+            colorScheme={editingId ? 'orange' : 'blue'}
+            isDisabled={!qualification || !institution || !isValidYear}
+            borderRadius="lg"
+            leftIcon={
+              <Icon
+                as={MaterialIcons}
+                name={editingId ? 'update' : 'school'}
+                size="sm"
+              />
+            }
+          >
+            {editingId ? 'Update Education' : 'Add Education'}
+          </Button>
+
+          {/* List of Education */}
+          <FlatList
+            data={educationList}
+            renderItem={renderEducationItem}
+            keyExtractor={item => item.id.toString()}
+            style={styles.list}
+            ListEmptyComponent={
+              <Text
+                style={{
+                  marginTop: 20,
+                  color: isDarkMode ? '#9CA3AF' : '#6B7280',
+                  textAlign: 'center',
+                }}
+              >
+                No education entries added yet.
+              </Text>
+            }
+          />
+        </Box>
+
+        {/* Next Button */}
+        <HStack justifyContent="flex-end" px={6} mt={6}>
+          <Button
+            onPress={handleSubmit}
+            bg="#3B82F6"
+            _pressed={{ bg: '#2563EB' }}
+            _text={{ color: '#fff', fontWeight: 'bold', letterSpacing: 0.5 }}
+            borderRadius="lg"
+            px={10}
+            py={3}
+            rightIcon={
+              <Icon as={MaterialIcons} name="arrow-forward" size="sm" />
+            }
+          >
+            Next
+          </Button>
+        </HStack>
+      </ScrollView>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    margin: 16,
+  boxShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
+    marginHorizontal: 16,
   },
-  header: {
-    fontSize: 20,
+  title: {
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 16,
-    color: '#333',
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
   },
   input: {
-    backgroundColor: '#f9f9f9',
-    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    padding: 12,
+    marginBottom: 14,
+    borderRadius: 10,
+    fontSize: 15,
   },
-  button: {
+  list: {
     marginTop: 20,
-    paddingVertical: 6,
+    width: '100%',
+  },
+  educationItem: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 14,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  educationText: {
+    fontSize: 15,
+    marginBottom: 2,
   },
 });
+
+export default EducationDetails;

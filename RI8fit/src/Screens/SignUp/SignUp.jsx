@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { VStack, FormControl, Text, Box, ScrollView } from 'native-base';
 import {
   TextInput,
@@ -17,10 +17,13 @@ import {
   View,
 } from 'react-native';
 import api from '../../API/api';
-
-// Ensure react-native-vector-icons is set up:
-// - iOS: Add MaterialIcons.ttf to Info.plist
-// - Android: Run `npx react-native link` or verify fonts in android/app/src/main/assets/fonts
+import {
+  setItem,
+  ACCESS_TOKEN,
+  REFRESH_TOKEN,
+  AUTH_DETAILS,
+} from '../../Utils/helper';
+import { UserContext } from '../../Context/UserContext';
 
 const SignUp = ({ navigation }) => {
   const { width, height } = useWindowDimensions();
@@ -29,7 +32,6 @@ const SignUp = ({ navigation }) => {
   const wp = p => (width * p) / 100;
   const hp = p => (height * p) / 100;
 
-  // PaperProvider theme for react-native-paper components
   const theme = {
     ...(isDarkMode ? MD3DarkTheme : MD3LightTheme),
     colors: {
@@ -41,14 +43,27 @@ const SignUp = ({ navigation }) => {
     },
   };
 
-  const [email, setEmail] = useState('');
+  const { email, setEmail, phone, setPhone } = useContext(UserContext);
+
+  // const [email, setEmail] = useState('');
+  // const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('Akshay');
+  const [confirmPassword, setConfirmPassword] = useState('Akshay');
   const [accountCreated, setAccountCreated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isInvalidEmail = email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isInvalidPhone = phone && !/^\d{10}$/.test(phone);
+  const isPasswordMismatch =
+    password && confirmPassword && password !== confirmPassword;
 
   const validateForm = () => {
     if (!email.trim() || isInvalidEmail) return 'Valid email is required';
+    if (!phone.trim() || isInvalidPhone)
+      return 'Valid 10-digit phone number is required';
+    if (!password.trim() || password.length < 6)
+      return 'Password must be at least 6 characters';
+    if (isPasswordMismatch) return 'Passwords do not match';
     return null;
   };
 
@@ -61,18 +76,49 @@ const SignUp = ({ navigation }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await api.post(`/auth/candidate/signup?email=${encodeURIComponent(email)}`);
+      const response = await api.post('/auth/candidate/signup', null, {
+        params: {
+          email,
+          password,
+          confirm_password: confirmPassword,
+          phone_no: phone,
+        },
+      });
 
-      if (response.status === 200) {
+      if (response.data.status === 200 || response.data.success === true) {
+        const { access_token, refresh_token } = response.data || {};
+
+        // ✅ Store tokens in storage
+        await setItem(ACCESS_TOKEN, access_token);
+        await setItem(REFRESH_TOKEN, refresh_token);
+        await setItem(AUTH_DETAILS, JSON.stringify(response.data));
+
         setAccountCreated(true);
+
         setTimeout(() => {
           setAccountCreated(false);
-          setEmail('');
-          navigation.navigate('VerifyOTP',{email});
+          // setEmail('');
+          // setPhone('');
+          setPassword('Akshay');
+          setConfirmPassword('Akshay');
+
+          navigation.navigate('VerifyOTP', {
+            token: access_token,
+          });
         }, 500);
+      } else {
+        Alert.alert('Error', response.data.message || 'Something went wrong');
       }
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to create account. Please try again.');
+      if (error.response?.status === 400) {
+        Alert.alert('Error', 'Email already exists. Please try another.');
+      } else {
+        Alert.alert(
+          'Error',
+          error.response?.data?.message ||
+            'Failed to create account. Please try again.',
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -108,7 +154,7 @@ const SignUp = ({ navigation }) => {
 
             <VStack space={hp(2)}>
               {/* Email Field */}
-              <FormControl isRequired isInvalid={isInvalidEmail}>
+              <FormControl isRequired>
                 <FormControl.Label>Email Address</FormControl.Label>
                 <TextInput
                   mode="outlined"
@@ -129,9 +175,81 @@ const SignUp = ({ navigation }) => {
                   }
                   style={styles.textInput}
                 />
-                {isInvalidEmail && (
+              </FormControl>
+
+              {/* Phone Number */}
+              <FormControl isRequired>
+                <FormControl.Label>Phone Number</FormControl.Label>
+                <TextInput
+                  mode="outlined"
+                  placeholder="Enter phone number"
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                  left={
+                    <TextInput.Icon
+                      icon={() => (
+                        <MaterialIcons
+                          name="phone"
+                          size={20}
+                          color={isDarkMode ? '#F3F4F6' : '#111827'}
+                        />
+                      )}
+                    />
+                  }
+                  style={styles.textInput}
+                />
+              </FormControl>
+
+              {/* Password */}
+              <FormControl isRequired>
+                <FormControl.Label>Password</FormControl.Label>
+                <TextInput
+                  mode="outlined"
+                  placeholder="Enter password"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  left={
+                    <TextInput.Icon
+                      icon={() => (
+                        <MaterialIcons
+                          name="lock"
+                          size={20}
+                          color={isDarkMode ? '#F3F4F6' : '#111827'}
+                        />
+                      )}
+                    />
+                  }
+                  style={styles.textInput}
+                />
+              </FormControl>
+
+              {/* Confirm Password */}
+              <FormControl isRequired isInvalid={isPasswordMismatch}>
+                <FormControl.Label>Confirm Password</FormControl.Label>
+                <TextInput
+                  mode="outlined"
+                  placeholder="Re-enter password"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  left={
+                    <TextInput.Icon
+                      icon={() => (
+                        <MaterialIcons
+                          name="lock-outline"
+                          size={20}
+                          color={isDarkMode ? '#F3F4F6' : '#111827'}
+                        />
+                      )}
+                    />
+                  }
+                  style={styles.textInput}
+                />
+                {isPasswordMismatch && (
                   <Text color="red.500" fontSize="xs" mt={1}>
-                    Valid email is required
+                    Passwords do not match
                   </Text>
                 )}
               </FormControl>

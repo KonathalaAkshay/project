@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import { ScrollView, Box, Button } from 'native-base';
+import { ScrollView, Box, Button, HStack, Icon } from 'native-base';
 import React, { useState, useRef } from 'react';
 import {
   Text,
@@ -11,6 +11,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const Education = ({ navigation }) => {
   const [educationList, setEducationList] = useState([]);
@@ -53,47 +54,57 @@ const Education = ({ navigation }) => {
   };
 
   const handleSubmit = () => {
-    navigation.navigate('SkillsPage');
+    const allEducation = [
+      { qualification, institution, year },
+      ...educationList,
+    ].filter(e => e.qualification && e.institution && e.year);
+
+    console.log('Final Education Data:', allEducation);
+    navigation.navigate('SkillsPage', { education: allEducation });
   };
 
   const renderEducationItem = ({ item }) => (
     <Box
       style={[
         styles.educationItem,
-        { backgroundColor: isDarkMode ? '#23272e' : '#f9f9f9' },
+        {
+          backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF',
+          shadowColor: isDarkMode ? '#000' : '#ccc',
+        },
       ]}
     >
       <Text
         style={[
           styles.educationText,
-          { color: isDarkMode ? '#F3F4F6' : '#23272e' },
+          { color: isDarkMode ? '#F3F4F6' : '#111827' },
         ]}
       >
-        🎓 Qualification: {item.qualification}
+        🎓 {item.qualification}
       </Text>
       <Text
         style={[
           styles.educationText,
-          { color: isDarkMode ? '#F3F4F6' : '#23272e' },
+          { color: isDarkMode ? '#F3F4F6' : '#374151' },
         ]}
       >
-        🏫 Institution: {item.institution}
+        🏫 {item.institution}
       </Text>
       <Text
         style={[
           styles.educationText,
-          { color: isDarkMode ? '#F3F4F6' : '#23272e' },
+          { color: isDarkMode ? '#F3F4F6' : '#6B7280' },
         ]}
       >
-        📅 Year: {item.year}
+        📅 {item.year}
       </Text>
+
       <Button
+        mt={3}
         size="sm"
-        mt={2}
         colorScheme="red"
+        leftIcon={<Icon as={MaterialIcons} name="delete" size="sm" />}
         onPress={() => handleDeleteEducation(item.id)}
-        borderRadius={10}
-        width="40%"
+        borderRadius="lg"
       >
         Delete
       </Button>
@@ -110,14 +121,13 @@ const Education = ({ navigation }) => {
       >
         <Box
           borderRadius="2xl"
-          p={wp(4)}
+          p={wp(5)}
           mb={hp(2)}
           style={[
             styles.boxShadow,
             { backgroundColor: isDarkMode ? '#1F2937' : '#fff' },
           ]}
-          alignItems="flex-start"
-          mt={4}
+          mt={5}
         >
           <Text
             style={[
@@ -125,23 +135,24 @@ const Education = ({ navigation }) => {
               { color: isDarkMode ? '#F3F4F6' : '#111827' },
             ]}
           >
-            Add Education
+            Primary Education (Required)
           </Text>
 
+          {/* First Education Inputs */}
           <Text
             style={[
               styles.label,
               { color: isDarkMode ? '#E5E7EB' : '#23272e' },
             ]}
           >
-            Qualification:
+            Qualification
           </Text>
           <TextInput
             style={[
               styles.input,
               {
                 backgroundColor: isDarkMode ? '#23272e' : '#fff',
-                color: isDarkMode ? '#F3F4F6' : '#23272e',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
               },
             ]}
             placeholder="e.g., B.Sc Computer Science"
@@ -156,14 +167,14 @@ const Education = ({ navigation }) => {
               { color: isDarkMode ? '#E5E7EB' : '#23272e' },
             ]}
           >
-            Institution:
+            Institution
           </Text>
           <TextInput
             style={[
               styles.input,
               {
                 backgroundColor: isDarkMode ? '#23272e' : '#fff',
-                color: isDarkMode ? '#F3F4F6' : '#23272e',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
               },
             ]}
             placeholder="e.g., XYZ University"
@@ -178,14 +189,14 @@ const Education = ({ navigation }) => {
               { color: isDarkMode ? '#E5E7EB' : '#23272e' },
             ]}
           >
-            Year:
+            Year
           </Text>
           <TextInput
             style={[
               styles.input,
               {
                 backgroundColor: isDarkMode ? '#23272e' : '#fff',
-                color: isDarkMode ? '#F3F4F6' : '#23272e',
+                color: isDarkMode ? '#F3F4F6' : '#111827',
               },
             ]}
             placeholder="e.g., 2023"
@@ -196,16 +207,19 @@ const Education = ({ navigation }) => {
             maxLength={4}
           />
 
+          {/* Add Another Button */}
           <Button
             onPress={handleAddEducation}
-            mt={2}
+            mt={4}
             colorScheme="blue"
             isDisabled={!qualification || !institution || !isValidYear}
-            borderRadius={10}
+            borderRadius="lg"
+            leftIcon={<Icon as={MaterialIcons} name="school" size="sm" />}
           >
-            Add Education
+            Add Another Education
           </Button>
 
+          {/* List of Additional Educations */}
           <FlatList
             data={educationList}
             renderItem={renderEducationItem}
@@ -215,26 +229,33 @@ const Education = ({ navigation }) => {
               <Text
                 style={{
                   marginTop: 20,
-                  color: isDarkMode ? '#9CA3AF' : '#23272e',
+                  color: isDarkMode ? '#9CA3AF' : '#6B7280',
+                  textAlign: 'center',
                 }}
               >
-                No education entries added yet.
+                No additional education entries yet.
               </Text>
             }
           />
         </Box>
 
-        <Button
-          mt={10}
-          onPress={handleSubmit}
-          alignSelf="flex-end"
-          bg="#3B82F6"
-          _text={{ color: '#FFFFFF' }}
-          borderRadius={100}
-          px={8}
-        >
-          Next
-        </Button>
+        {/* Next Button */}
+        <HStack justifyContent="flex-end" px={6} mt={6}>
+          <Button
+            onPress={handleSubmit}
+            bg="#3B82F6"
+            _pressed={{ bg: '#2563EB' }}
+            _text={{ color: '#fff', fontWeight: 'bold', letterSpacing: 0.5 }}
+            borderRadius="lg"
+            px={10}
+            py={3}
+            rightIcon={
+              <Icon as={MaterialIcons} name="arrow-forward" size="sm" />
+            }
+          >
+            Next
+          </Button>
+        </HStack>
       </ScrollView>
     </View>
   );
@@ -244,42 +265,43 @@ const styles = StyleSheet.create({
   boxShadow: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     elevation: 5,
     marginHorizontal: 16,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 5,
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-    width: '100%',
-    fontSize: 16,
+    borderColor: '#d1d5db',
+    padding: 12,
+    marginBottom: 14,
+    borderRadius: 10,
+    fontSize: 15,
   },
   list: {
     marginTop: 20,
     width: '100%',
   },
   educationItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 14,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   educationText: {
-    fontSize: 16,
+    fontSize: 15,
     marginBottom: 2,
   },
 });
