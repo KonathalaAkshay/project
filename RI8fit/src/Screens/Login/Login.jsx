@@ -10,40 +10,44 @@ import {
   Center,
   useToast,
   Image,
-  HStack,
-  Icon,
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
-import api from '../../API/api'; // Axios instance
+import axio from '../../API/axio'; 
 import GoogleIcon from '../../Store/GoogleIcon/GoogleIcon';
+import {
+  ACCESS_TOKEN,
+  AUTH_DETAILS,
+  EXPIRY_TIME,
+  IS_AUTHENTICATED,
+  REFRESH_TOKEN,
+  setItem,
+  USER_DATA,
+  USER_TYPE,
+} from '../../Utils/helper';
+import { useAuth } from '../../Context/AuthContext';
 
 const Login = ({ navigation }) => {
-  const [email, setEmail] = useState('akshay@gmail.com');
-  const [password, setPassword] = useState('12345678');
+  const [username, setUsername] = useState('akshay.konathala02@gmail.com');
+  const [password, setPassword] = useState('Akshay');
   const toast = useToast();
+  const { setIsAuthenticated } = useAuth();
 
   // Handle deep links for Google OAuth redirect
   useEffect(() => {
     const handleDeepLink = ({ url }) => {
-      if (url || url.startsWith('RI8fit://auth')) {
+      if (url && url.startsWith('RI8fit://auth')) {
         try {
           const urlObj = new URL(url);
+          const success = urlObj.searchParams.get('success');
+          const userId = urlObj.searchParams.get('userId');
+          const token = urlObj.searchParams.get('token');
 
-          // const success = urlObj.searchParams.get('success');
-          // const userId = urlObj.searchParams.get('userId');
-          // const token = urlObj.searchParams.get('token');
-          // && userId && token
-          if (true) {
-            // console.log('User ID:', userId);
-            // console.log('Token:', token);
+          if (success && userId && token) {
             navigation.navigate('HomeCard', { userId, token });
           } else {
             const errorMessage =
-              urlObj.searchParams.get('error') || 'Google Sign-Up failed';
-            toast.show({
-              description: errorMessage,
-              bg: 'red.500',
-            });
+              urlObj.searchParams.get('error') || 'Google Sign-In failed';
+            toast.show({ description: errorMessage, bg: 'red.500' });
           }
         } catch (err) {
           toast.show({
@@ -54,17 +58,14 @@ const Login = ({ navigation }) => {
       }
     };
 
-    // Listen for URL events
     const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Handle when app is opened from killed state
     Linking.getInitialURL().then(url => {
       if (url && url.startsWith('RI8fit://auth')) {
         handleDeepLink({ url });
       }
     });
 
-    // Cleanup
     return () => {
       subscription.remove();
     };
@@ -74,17 +75,54 @@ const Login = ({ navigation }) => {
     navigation.navigate('SignUp');
   };
 
-  const handleLogin = () => {
-    if (email === 'akshay@gmail.com' && password === '12345678') {
-      navigation.navigate('EmploymentDetail');
-    } else {
-      toast.show({ description: 'Invalid credentials', bg: 'red.500' });
+  // Normal login flow
+  const handleLogin = async () => {
+    if (!username || !password) {
+      toast.show({
+        description: 'Please enter both email and password',
+        bg: 'red.500',
+      });
+      return;
+    }
+
+    try {
+      const response = await axio.post('/auth/candidate/login', {
+        username,
+        password,
+      });
+
+      if (response.data?.success && response.status === 200) {
+        const { username, access_token, refresh_token, expiry_Time, token_type } =
+          response.data.data;
+
+           const expiryTime = Date.now() + 15 * 60 * 1000;
+        // Store everything
+        await setItem(AUTH_DETAILS, { access_token, refresh_token, expiryTime });
+        await setItem(ACCESS_TOKEN, access_token);
+        await setItem(REFRESH_TOKEN, refresh_token);
+        await setItem(EXPIRY_TIME, expiryTime.toString());
+        await setItem(USER_TYPE, token_type);
+        await setItem(USER_DATA, username||"");
+        await setItem(IS_AUTHENTICATED, 'true');
+
+        setIsAuthenticated(true);
+        navigation.navigate('HomeCard', { token });
+      } else {
+        const msg = response.data?.message || 'Login failed';
+        throw new Error(msg);
+      }
+    } catch (error) {
+      console.log('Login error:', error.response?.data || error.message);
+      const errorMessage =
+        error.response?.data?.message || 'Login failed. Please try again.';
+      toast.show({ description: errorMessage, bg: 'red.500' });
     }
   };
 
+  // Google OAuth flow
   const handleSignUpWithGoogle = async () => {
     try {
-      const response = await api.get('/auth/candidate/google/mobile/signup');
+      const response = await axio.get('/auth/candidate/google/mobile/signup');
 
       if (
         response.data?.success &&
@@ -92,19 +130,14 @@ const Login = ({ navigation }) => {
         response.status === 200
       ) {
         const { google_oauth_url } = response.data.data;
-        // const supported = await Linking.canOpenURL(google_oauth_url);
-        if (response.status === 200) {
-          await Linking.openURL(google_oauth_url);
-        } else {
-          throw new Error('Cannot open Google OAuth URL');
-        }
+        await Linking.openURL(google_oauth_url);
       } else {
-        throw new Error('Google Sign-Up failed: Invalid response');
+        throw new Error('Google Sign-In failed: Invalid response');
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
-        'Google Sign-Up failed. Please try again.';
+        'Google Sign-In failed. Please try again.';
       toast.show({ description: errorMessage, bg: 'red.500' });
     }
   };
@@ -138,8 +171,8 @@ const Login = ({ navigation }) => {
           <FormControl isRequired>
             <FormControl.Label>Email</FormControl.Label>
             <TextInput
-              value={email}
-              onChangeText={setEmail}
+              value={username}
+              onChangeText={setUsername}
               keyboardType="email-address"
               autoCapitalize="none"
               style={styles.input}
@@ -190,9 +223,9 @@ const Login = ({ navigation }) => {
             onPress={handleSignUpWithGoogle}
             _hover={{ bg: 'gray.50' }}
             shadow="2"
-            leftIcon={<GoogleIcon size={20} />} // 👈 Icon on left side
+            leftIcon={<GoogleIcon size={20} />}
           >
-            Sign Up with Google
+            Sign in with Google
           </Button>
         </VStack>
       </Box>

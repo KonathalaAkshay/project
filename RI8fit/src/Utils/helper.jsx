@@ -60,9 +60,19 @@ export const getUserData = async () => {
 // Get full token details
 export const tokenData = async () => {
   try {
-    const data = await AsyncStorage.getItem(AUTH_DETAILS);
-    return data ? JSON.parse(data) : null;
+    const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN);
+    const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN);
+    const expiryTime = await AsyncStorage.getItem(EXPIRY_TIME);
+
+    if (!accessToken) return null;
+
+    return {
+      token: accessToken,
+      refreshToken,
+      expiryTime: expiryTime ? parseInt(expiryTime, 10) : null,
+    };
   } catch (e) {
+    console.error('Error getting token data:', e);
     return null;
   }
 };

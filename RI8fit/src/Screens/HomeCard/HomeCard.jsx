@@ -58,9 +58,9 @@ const HomeCard = ({ navigation }) => {
   const users = [
     {
       id: id,
-      name: name,
+      name: "Simon",
       title: 'Frontend Developer',
-      experience: experience,
+      experience: "3",
       skills: ['React', 'JavaScript', 'UI/UX'],
       profilePic: profile,
     },
