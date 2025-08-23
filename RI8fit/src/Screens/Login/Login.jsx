@@ -12,7 +12,7 @@ import {
   Image,
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
-import axio from '../../API/axio'; 
+import axio from '../../API/axio';
 import GoogleIcon from '../../Store/GoogleIcon/GoogleIcon';
 import {
   ACCESS_TOKEN,
@@ -87,22 +87,31 @@ const Login = ({ navigation }) => {
 
     try {
       const response = await axio.post('/auth/candidate/login', {
-        username,
-        password,
+        username: username,
+        password: password,
       });
 
       if (response.data?.success && response.status === 200) {
-        const { username, access_token, refresh_token, expiry_Time, token_type } =
-          response.data.data;
+        const {
+          username,
+          access_token,
+          refresh_token,
+          expiry_Time,
+          token_type,
+        } = response.data.data;
 
-           const expiryTime = Date.now() + 15 * 60 * 1000;
+        const expiryTime = Date.now() + 1 * 60 * 1000;
         // Store everything
-        await setItem(AUTH_DETAILS, { access_token, refresh_token, expiryTime });
+        await setItem(AUTH_DETAILS, {
+          access_token,
+          refresh_token,
+          expiryTime,
+        });
         await setItem(ACCESS_TOKEN, access_token);
         await setItem(REFRESH_TOKEN, refresh_token);
         await setItem(EXPIRY_TIME, expiryTime.toString());
         await setItem(USER_TYPE, token_type);
-        await setItem(USER_DATA, username||"");
+        await setItem(USER_DATA, username || '');
         await setItem(IS_AUTHENTICATED, 'true');
 
         setIsAuthenticated(true);

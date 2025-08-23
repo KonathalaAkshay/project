@@ -115,18 +115,20 @@ const AppStack = () => {
           <Stack.Screen name="SkillsPage" component={SkillsPage} />
           <Stack.Screen name="ResumeUpload" component={ResumeUpload} />
           <Stack.Screen name="Education" component={Education} />
-          <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="ProfileView" component={ProfileView} />
           <Stack.Screen name="BasicDetails" component={BasicDetails} />
           <Stack.Screen name="EmploymentDetail" component={EmploymentDetail} />
           <Stack.Screen name="EducationDetails" component={EducationDetails} />
           <Stack.Screen name="Resume" component={Resume} />
-          <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
         </>
       ) : (
         <>
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="SignUp" component={SignUp} />
+          <Stack.Screen name="VerifyOTP" component={VerifyOTP} />
+          <Stack.Screen name="EmploymentDetail" component={EmploymentDetail} />
+          <Stack.Screen name="EducationDetails" component={EducationDetails} />
+          <Stack.Screen name="Register" component={Register} />
+          <Stack.Screen name="ProfileView" component={ProfileView} />
         </>
       )}
     </Stack.Navigator>

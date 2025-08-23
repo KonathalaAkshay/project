@@ -37,7 +37,7 @@ export const AuthProvider = ({ children, navigationRef }) => {
       const json = await response.json();
 
       if (json?.access_token) {
-        const newExpiry = Date.now() + 15 * 60 * 1000;
+        const newExpiry = Date.now() + 1 * 60 * 1000;
         await setItem(ACCESS_TOKEN, json.access_token);
         await setItem(EXPIRY_TIME, newExpiry.toString());
         await setItem(REFRESH_TOKEN, refresh_Token);
