@@ -43,7 +43,7 @@ const Profile = () => {
   const [experience, setExperience] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [profile,setProfile] = useState('');
+  const [profile, setProfile] = useState('');
   const [report, setReport] = useState('');
   const [inputText, setInputText] = useState('');
   const [entries, setEntries] = useState([]);
@@ -133,11 +133,13 @@ const Profile = () => {
       const response = await axios.get(API_BASE_URL);
       const user = response.data.results[0];
       setName(`${user.name.first} ${user.name.last}`);
-      setDob(new Date(user.dob.date).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }));
+      setDob(
+        new Date(user.dob.date).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      );
       setProfile(`${user.picture.medium}`);
       setEmail(user.email);
       setPhone(user.phone);
@@ -146,7 +148,7 @@ const Profile = () => {
       setReport('10 days');
       setSummary('');
       setAdditional('');
-      setEntries(['python']); 
+      setEntries(['python']);
       setProfessionalDetails({
         industry: 'IT Services & Consulting',
         department: 'IT & Information Security',
@@ -349,16 +351,13 @@ const Profile = () => {
             {value}
           </Text>
           <IconButton
-            icon={
-              <Icon
-                as={MaterialIcons}
-                name="edit"
-                size={wp(5)}
-                color="#3B82F6"
-              />
-            }
-            onPress={() => setEditField({ ...editField, [fieldKey]: true })}
             borderRadius="full"
+            _icon={{
+              as: MaterialIcons,
+              name: 'edit',
+              size: wp(5),
+              color: '#3B82F6',
+            }}
           />
         </HStack>
       )}
@@ -420,7 +419,7 @@ const Profile = () => {
             <Avatar
               size={wp(24)}
               source={{
-                uri: profile, 
+                uri: profile,
               }}
               mb={hp(2)}
               bg={isDarkMode ? '#4B5563' : '#BFDBFE'}

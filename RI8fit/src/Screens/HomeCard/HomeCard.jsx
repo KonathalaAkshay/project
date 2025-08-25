@@ -23,7 +23,7 @@ const HomeCard = ({ navigation }) => {
   const [experience, setExperience] = useState('');
   const [error, setError] = useState({});
 
-  const API = 'https://randomuser.me/api';
+  const API = '#';
 
   const fetchProfileData = async () => {  
     setRefreshing(true);

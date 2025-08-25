@@ -27,7 +27,7 @@ import {
 import { useAuth } from '../../Context/AuthContext';
 
 const Login = ({ navigation }) => {
-  const [username, setUsername] = useState('akshay.konathala02@gmail.com');
+  const [username, setUsername] = useState('akshaykonathala08@gmail.com');
   const [password, setPassword] = useState('Akshay');
   const toast = useToast();
   const { setIsAuthenticated } = useAuth();
@@ -96,20 +96,20 @@ const Login = ({ navigation }) => {
           username,
           access_token,
           refresh_token,
-          expiry_Time,
+          expiry_time,
           token_type,
         } = response.data.data;
 
-        const expiryTime = Date.now() + 1 * 60 * 1000;
-        // Store everything
+        // const expiryTime = Date.now() + 15 * 60 * 1000;
         await setItem(AUTH_DETAILS, {
           access_token,
           refresh_token,
-          expiryTime,
+          expiry_time,
         });
         await setItem(ACCESS_TOKEN, access_token);
         await setItem(REFRESH_TOKEN, refresh_token);
-        await setItem(EXPIRY_TIME, expiryTime.toString());
+        // await setItem(EXPIRY_TIME, expiryTime.toString());
+        await setItem(EXPIRY_TIME, expiry_time.toString());
         await setItem(USER_TYPE, token_type);
         await setItem(USER_DATA, username || '');
         await setItem(IS_AUTHENTICATED, 'true');

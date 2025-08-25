@@ -265,7 +265,7 @@ const EmploymentDetails = ({ navigation }) => {
   const [experienceList, setExperienceList] = useState([]);
 
   const handleSubmit = () => {
-    navigation.navigate('ProfileView');
+    navigation.navigate('CompleteSubmit');
   };
 
   useEffect(() => {

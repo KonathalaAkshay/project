@@ -92,6 +92,7 @@ import ProfileView from '../Screens/Profile/ProfileView';
 import { UserProvider } from '../Context/UserContext';
 import { CandidateProvider } from '../Context/CandidateContext';
 import { AuthProvider, useAuth } from '../Context/AuthContext'; // 👈 bring in AuthContext
+import CompleteSubmit from '../Screens/Register/CompleteSubmit';
 
 const Stack = createNativeStackNavigator();
 
@@ -119,6 +120,7 @@ const AppStack = () => {
           <Stack.Screen name="EmploymentDetail" component={EmploymentDetail} />
           <Stack.Screen name="EducationDetails" component={EducationDetails} />
           <Stack.Screen name="Resume" component={Resume} />
+          <Stack.Screen name="ProfileView" component={ProfileView} />
         </>
       ) : (
         <>
@@ -131,6 +133,7 @@ const AppStack = () => {
           <Stack.Screen name="ProfileView" component={ProfileView} />
         </>
       )}
+      <Stack.Screen name="CompleteSubmit" component={CompleteSubmit} />
     </Stack.Navigator>
   );
 };
