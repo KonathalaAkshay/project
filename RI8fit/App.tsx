@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import OpenScreen from './src/Screens/OpenScreen/OpenScreen';
 import AppNavigator from './src/Navigation/AppNavigation';
+// import Register from './src/Screens/Register/Register';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);

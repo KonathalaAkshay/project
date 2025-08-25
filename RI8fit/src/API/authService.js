@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { ACCESS_TOKEN, REFRESH_TOKEN, USER_DATA } from '../Utils/helpers';
 import { setItem } from '../Utils/helpers';
 
-const LoginURL = '//auth/login';
+const LoginURL = '/auth/candidate/login';
 
 export const setLogin = async (payload, setLoading) => {
   setLoading(true);

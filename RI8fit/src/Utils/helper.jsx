@@ -1,40 +1,78 @@
-export const IS_AUTHENTICATED = "isAutenticated";
-export const USER_DATA = "user";
-export const AUTH_DETAILS = "auth-details"
-export const ACCESS_TOKEN = "accessToken";
-export const REFRESH_TOKEN = "refreshToken";
-export const EXPIRY_TIME = "expiryTime";
-export const USER_TYPE="userType";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const setItem = (key, value) => {
-    localStorage.setItem(key, value)
-}
+export const IS_AUTHENTICATED = 'isAuthenticated';
+export const USER_DATA = 'user';
+export const AUTH_DETAILS = 'auth-details';
+export const ACCESS_TOKEN = 'accessToken';
+export const REFRESH_TOKEN = 'refreshToken';
+export const EXPIRY_TIME = 'expiryTime';
+export const USER_TYPE = 'userType';
 
-export const getItem = (key) => {
-    return localStorage.getItem(key)
-}
-export const clearLocalStorage = () => {
-    localStorage.removeItem(EXPIRY_TIME);
-    localStorage.removeItem(REFRESH_TOKEN);
-    localStorage.removeItem(ACCESS_TOKEN);
-    localStorage.removeItem(AUTH_DETAILS);
-    localStorage.removeItem(USER_DATA);
-    localStorage.removeItem(IS_AUTHENTICATED);
-    localStorage.removeItem(USER_TYPE);
-}
-export const getUserData = () => {
-    const data = localStorage.getItem(USER_DATA);
-    return data && JSON.parse(data);
-}
-export const tokenData = () => {
-    const data = localStorage.getItem(AUTH_DETAILS);
-    return data && JSON.parse(data);
-}
+// Save data
+export const setItem = async (key, value) => {
+  try {
+    const storeValue =
+      typeof value === 'object' ? JSON.stringify(value) : value;
+    await AsyncStorage.setItem(key, storeValue);
+  } catch (e) {
+    console.error('Error saving item:', e);
+  }
+};
 
-// export const setItem = (key, value) => {
-//   if (typeof value === 'object') {
-//     localStorage.setItem(key, JSON.stringify(value));
-//   } else {
-//     localStorage.setItem(key, value);
-//   }
-// };
+// Get data
+export const getItem = async key => {
+  try {
+    const value = await AsyncStorage.getItem(key);
+    return value ? value : null;
+  } catch (e) {
+    console.error('Error getting item:', e);
+    return null;
+  }
+};
+
+// Clear all auth-related data
+export const clearLocalStorage = async () => {
+  try {
+    await AsyncStorage.multiRemove([
+      EXPIRY_TIME,
+      REFRESH_TOKEN,
+      ACCESS_TOKEN,
+      AUTH_DETAILS,
+      USER_DATA,
+      IS_AUTHENTICATED,
+      USER_TYPE,
+    ]);
+  } catch (e) {
+    console.error('Error clearing storage:', e);
+  }
+};
+
+// Get user data
+export const getUserData = async () => {
+  try {
+    const data = await AsyncStorage.getItem(USER_DATA);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Get full token details
+export const tokenData = async () => {
+  try {
+    const accessToken = await AsyncStorage.getItem(ACCESS_TOKEN);
+    const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN);
+    const expiryTime = await AsyncStorage.getItem(EXPIRY_TIME);
+
+    if (!accessToken) return null;
+
+    return {
+      token: accessToken,
+      refreshToken,
+      expiryTime: expiryTime ? parseInt(expiryTime, 10) : null,
+    };
+  } catch (e) {
+    console.error('Error getting token data:', e);
+    return null;
+  }
+};

@@ -23,7 +23,7 @@ const HomeCard = ({ navigation }) => {
   const [experience, setExperience] = useState('');
   const [error, setError] = useState({});
 
-  const API = 'https://randomuser.me/api';
+  const API = '#';
 
   const fetchProfileData = async () => {  
     setRefreshing(true);
@@ -58,9 +58,9 @@ const HomeCard = ({ navigation }) => {
   const users = [
     {
       id: id,
-      name: name,
+      name: "Simon",
       title: 'Frontend Developer',
-      experience: experience,
+      experience: "3",
       skills: ['React', 'JavaScript', 'UI/UX'],
       profilePic: profile,
     },
