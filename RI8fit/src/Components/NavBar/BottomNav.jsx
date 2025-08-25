@@ -9,14 +9,43 @@ import {
   useColorScheme,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
+import api from '../../API/api';
 
 const BottomNavBar = () => {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
-  const handleProfile = () => {
-    navigation.navigate('Profile');
+  const handleProfile = async () => {
+    try {
+      const token = await getItem(ACCESS_TOKEN);
+      if (!token) {
+        console.log('No token found');
+        return;
+      }
+
+      const response = await api.get(
+        '/candidate/get-candidates-complete-details',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data?.success) {
+        // console.log('Candidate Details:', response.data.data);
+        navigation.navigate('ProfileView', {
+          candidateData: response.data.data,
+        });
+      } else {
+        console.log('Error fetching candidate details', response.data?.message);
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+    }
   };
 
   const handleLogin = () => {
