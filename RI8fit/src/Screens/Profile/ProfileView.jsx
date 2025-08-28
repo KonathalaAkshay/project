@@ -1216,6 +1216,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import api from '../../API/api';
 import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
+import BottomNavBar from '../../Components/NavBar/BottomNav';
 
 const { width, height } = Dimensions.get('window');
 const wp = percentage => (width * percentage) / 100;
@@ -1305,27 +1306,12 @@ const ProfileView = ({ route, navigation }) => {
     setEditField(null);
   };
 
-  /** 🔥 SAVE CHANGES + API CALL 🔥 **/
   const handleSave = async () => {
     let updatedExperience = [...experience];
     let updatedEducation = [...education];
-    let updatedPersonal = {
-      date_of_birth: candidateData.personal_details?.date_of_birth || null,
-      gender: candidateData.personal_details?.gender || '',
-      marital_status: candidateData.personal_details?.marital_status || '',
-      nationality: candidateData.personal_details?.nationality || '',
-      languages_known: candidateData.personal_details?.languages_known || [],
-      address: candidateData.personal_details?.address || '',
-      preferred_salary: candidateData.personal_details?.preferred_salary || 0,
-      city: candidateData.personal_details?.city || '',
-      state: candidateData.personal_details?.state || '',
-      country: candidateData.personal_details?.country || '',
-      pincode: candidateData.personal_details?.pincode || '',
-    };
 
     if (editField) {
       const { type, value, index } = editField;
-
       if (type === 'email') setEmail(value);
       else if (type === 'phone') setPhone(value);
       else if (type === 'availability') setAvailability(value);
@@ -1344,60 +1330,18 @@ const ProfileView = ({ route, navigation }) => {
 
     try {
       const token = await getItem(ACCESS_TOKEN);
+      const payload = { employment_details: updatedExperience };
 
-      // ✅ Payload strictly matches backend schema
-      const payload = {
-        employment_details: updatedExperience.map(exp => ({
-          is_current: true,
-          employment_type: 'string',
-          total_exp_years: Number(totalExp) || 0,
-          total_exp_months: 0,
-          company_name: exp.company_name || '',
-          job_title: exp.job_title || '',
-          joining_date: exp.joining_date || null,
-          current_salary: 0,
-          salary_breakdown: 'string',
-          skills_used: skills,
-          job_profile: 'string',
-          country: 'string',
-          location: 'string',
-          notice_period_days: 0,
-          duration: exp.duration || '',
-        })),
-        education_details: updatedEducation.map(edu => ({
-          education_level: edu.education_level || '',
-          university: edu.university || '',
-          course: edu.course || '',
-          specialization: edu.specialization || '',
-          course_type: edu.course_type || '',
-          start_year: edu.start_year ? Number(edu.start_year) : null,
-          end_year: edu.end_year ? Number(edu.end_year) : null,
-          grading_system: edu.grading_system || '',
-          marks: edu.marks ? Number(edu.marks) : null,
-        })),
-        personal_details: updatedPersonal,
-      };
-
-      // 🔥 pick employment_id from the currently edited exp
-      const employmentId =
-        editExperience?.id || (experience[0] ? experience[0].id : null);
-
-      if (employmentId) {
+      if (editExperience?.id) {
         await api.put(
-          `/candidates/update-employment/${employmentId}`,
+          `/candidates/update-employment/${editExperience.id}`,
           payload,
           { headers: { Authorization: `Bearer ${token}` } },
         );
         Alert.alert('Success', 'Profile updated successfully');
-      } else {
-        Alert.alert('Error', 'No employment record found');
       }
     } catch (error) {
-      console.error('Update failed:', error?.response?.data || error);
-      Alert.alert(
-        'Error',
-        error?.response?.data?.message || 'Failed to update profile',
-      );
+      Alert.alert('Error', 'Failed to update profile');
     }
   };
 
@@ -1413,6 +1357,7 @@ const ProfileView = ({ route, navigation }) => {
 
   const renderField = (label, value, type) => (
     <View style={styles.fieldRow}>
+      <MaterialIcons name="edit" size={18} color="#3B82F6" />
       <Text
         style={[
           styles.fieldLabel,
@@ -1439,7 +1384,7 @@ const ProfileView = ({ route, navigation }) => {
     <View
       style={[
         styles.container,
-        { backgroundColor: isDarkMode ? '#f0f2f7ff' : '#0c0c0bff' },
+        { backgroundColor: isDarkMode ? '#111827' : '#bedaf5ff' },
       ]}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -1447,6 +1392,7 @@ const ProfileView = ({ route, navigation }) => {
         <View
           style={[
             styles.card,
+            styles.headerCard,
             { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
           ]}
         >
@@ -1461,7 +1407,7 @@ const ProfileView = ({ route, navigation }) => {
           <Text
             style={[
               styles.email,
-              { color: isDarkMode ? '#D1D5DB' : '#6B7280' },
+              { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
             ]}
           >
             {email}
@@ -1470,14 +1416,18 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Resume */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Resume</Text>
-          <Text>{resumeUrl || 'No resume uploaded'}</Text>
+          <Text style={styles.sectionTitle}>📄 Resume</Text>
+          <Text style={styles.valueText}>
+            {resumeUrl || 'No resume uploaded'}
+          </Text>
         </View>
 
         {/* Summary */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Profile Summary</Text>
-          <Text>{summary || 'No summary provided'}</Text>
+          <Text style={styles.sectionTitle}>📝 Profile Summary</Text>
+          <Text style={styles.valueText}>
+            {summary || 'No summary provided'}
+          </Text>
           <Pressable onPress={() => openFieldModal('summary', summary)}>
             <Text style={styles.editLink}>Edit</Text>
           </Pressable>
@@ -1485,7 +1435,7 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Basic Details */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Basic Details</Text>
+          <Text style={styles.sectionTitle}>ℹ️ Basic Details</Text>
           {renderField('Email', email, 'email')}
           {renderField('Phone', phone, 'phone')}
           {renderField('Availability', availability, 'availability')}
@@ -1494,12 +1444,12 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Education */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Education</Text>
+          <Text style={styles.sectionTitle}>🎓 Education</Text>
           {education?.length > 0 ? (
             education.map((edu, idx) => (
               <View key={idx} style={styles.row}>
                 <Text>
-                  {edu?.course || '—'} · {edu?.university || '—'} (
+                  {edu?.course || '—'} ·{edu?.university || '—'} (
                   {edu?.end_year || '—'})
                 </Text>
                 <Pressable
@@ -1510,38 +1460,34 @@ const ProfileView = ({ route, navigation }) => {
               </View>
             ))
           ) : (
-            <Text>No education details</Text>
+            <Text style={styles.valueText}>No education details</Text>
           )}
         </View>
 
         {/* Experience */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Professional Experience</Text>
+          <Text style={styles.sectionTitle}>💼 Professional Experience</Text>
           {experience?.length > 0 ? (
             experience.map((exp, idx) => (
               <View key={idx} style={styles.expBox}>
-                <Text style={{ fontWeight: 'bold' }}>
-                  {exp?.job_title || '—'}
-                </Text>
+                <Text style={styles.expTitle}>{exp?.job_title || '—'}</Text>
                 <Text>{exp?.company_name || '—'}</Text>
                 <Text>
                   {exp?.joining_date || '—'} → {exp?.end_date || 'Present'}
                 </Text>
-                <Text>{exp?.duration || ''}</Text>
-
                 <Pressable onPress={() => openExperienceModal(exp, idx)}>
                   <Text style={styles.editLink}>Edit</Text>
                 </Pressable>
               </View>
             ))
           ) : (
-            <Text>No experience details</Text>
+            <Text style={styles.valueText}>No experience details</Text>
           )}
         </View>
 
         {/* Skills */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Skills</Text>
+          <Text style={styles.sectionTitle}>🛠 Skills</Text>
           <View style={styles.skillContainer}>
             {skills?.length > 0 ? (
               skills.map((skill, idx) => (
@@ -1549,8 +1495,8 @@ const ProfileView = ({ route, navigation }) => {
                   <Text style={styles.skillText}>{skill}</Text>
                   <Pressable onPress={() => handleDeleteSkill(idx)}>
                     <MaterialIcons
-                      name="delete"
-                      size={20}
+                      name="close"
+                      size={16}
                       color="#EF4444"
                       style={{ marginLeft: 6 }}
                     />
@@ -1558,18 +1504,21 @@ const ProfileView = ({ route, navigation }) => {
                 </View>
               ))
             ) : (
-              <Text>No skills listed</Text>
+              <Text style={styles.valueText}>No skills listed</Text>
             )}
           </View>
         </View>
 
         {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <MaterialIcons name="logout" size={20} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Edit Modal */}
+      <BottomNavBar />
+
+      {/* Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View
@@ -1580,9 +1529,7 @@ const ProfileView = ({ route, navigation }) => {
           >
             {editField ? (
               <>
-                <Text style={styles.modalTitle}>
-                  Edit {editField?.type?.toUpperCase()}
-                </Text>
+                <Text style={styles.modalTitle}>Edit {editField?.type}</Text>
                 <TextInput
                   style={styles.input}
                   value={editField?.value || ''}
@@ -1609,30 +1556,6 @@ const ProfileView = ({ route, navigation }) => {
                     setEditExperience(prev => ({ ...prev, company_name: val }))
                   }
                   placeholder="Company Name"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editExperience.joining_date}
-                  onChangeText={val =>
-                    setEditExperience(prev => ({ ...prev, joining_date: val }))
-                  }
-                  placeholder="Joining Date (YYYY-MM-DD)"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editExperience.end_date}
-                  onChangeText={val =>
-                    setEditExperience(prev => ({ ...prev, end_date: val }))
-                  }
-                  placeholder="End Date"
-                />
-                <TextInput
-                  style={styles.input}
-                  value={editExperience.duration}
-                  onChangeText={val =>
-                    setEditExperience(prev => ({ ...prev, duration: val }))
-                  }
-                  placeholder="Duration"
                 />
               </>
             ) : null}
@@ -1662,26 +1585,38 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: wp(4),
     marginBottom: hp(2),
-    elevation: 3,
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
   },
+  headerCard: { alignItems: 'center' },
   avatar: {
-    width: wp(24),
-    height: wp(24),
-    borderRadius: wp(12),
+    width: wp(22),
+    height: wp(22),
+    borderRadius: wp(11),
     backgroundColor: '#3B82F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: hp(1.5),
-    alignSelf: 'center',
   },
-  avatarText: { fontSize: wp(8), color: '#FFFFFF', fontWeight: 'bold' },
-  name: { fontSize: wp(6), fontWeight: 'bold', textAlign: 'center' },
-  email: { fontSize: wp(4), textAlign: 'center' },
-  cardTitle: { fontSize: wp(4.5), fontWeight: 'bold', marginBottom: 6 },
+  avatarText: { fontSize: wp(8), color: '#fff', fontWeight: 'bold' },
+  name: { fontSize: wp(6), fontWeight: 'bold' },
+  email: { fontSize: wp(4), marginTop: 4 },
+  sectionTitle: {
+    fontSize: wp(5), // Slightly larger for better mobile readability
+    fontWeight: '600', // Retained for bold emphasis
+    marginBottom: 12, // Increased spacing for improved vertical rhythm on phones
+    lineHeight: wp(6.5), // Added for better text flow and legibility
+    color: '#333', // Added high-contrast color (customize based on your app's theme)
+  },
+
+  valueText: { fontSize: wp(4), color: '#374151' },
   editLink: { color: '#3B82F6', fontWeight: '600', marginTop: 6 },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  fieldLabel: { fontWeight: 'bold', fontSize: wp(4), marginRight: 6 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  fieldLabel: { fontWeight: '600', fontSize: wp(4), marginHorizontal: 6 },
   fieldValue: { flex: 1, fontSize: wp(4) },
   row: {
     flexDirection: 'row',
@@ -1691,9 +1626,10 @@ const styles = StyleSheet.create({
   expBox: {
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: '#F3F4F6',
     marginBottom: 6,
   },
+  expTitle: { fontWeight: '600', fontSize: wp(4.2), marginBottom: 4 },
   skillContainer: { flexDirection: 'row', flexWrap: 'wrap' },
   skillBadge: {
     flexDirection: 'row',
@@ -1707,13 +1643,20 @@ const styles = StyleSheet.create({
   },
   skillText: { color: '#0369A1', fontWeight: '500' },
   logoutButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#EF4444',
     paddingVertical: 12,
     borderRadius: 8,
     marginTop: 20,
-    alignItems: 'center',
   },
-  logoutText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: wp(4.2) },
+  logoutText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: wp(4),
+    marginLeft: 6,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -1743,7 +1686,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 8,
   },
-  saveText: { color: '#FFFFFF', fontWeight: '600' },
+  saveText: { color: '#fff', fontWeight: '600' },
 });
 
 export default ProfileView;
