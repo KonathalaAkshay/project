@@ -73,7 +73,7 @@ const HomeCard = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         marginBottom={10}
-        style={{ backgroundColor: isDarkMode ? '#111827' : '#F3F4F6' }}
+        style={{ backgroundColor: isDarkMode ? '#f1f3f7ff' : '#bedaf5ff' }}
       >
         {users.map(user => (
           <Box
