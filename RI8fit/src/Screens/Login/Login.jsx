@@ -115,7 +115,7 @@ const Login = ({ navigation }) => {
         await setItem(IS_AUTHENTICATED, 'true');
 
         setIsAuthenticated(true);
-        navigation.navigate('HomeCard', { token });
+        navigation.navigate('HomeCard', { token: access_token });
       } else {
         const msg = response.data?.message || 'Login failed';
         throw new Error(msg);
