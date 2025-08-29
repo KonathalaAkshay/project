@@ -1357,6 +1357,7 @@ const ProfileView = ({ route, navigation }) => {
 
   const renderField = (label, value, type) => (
     <View style={styles.fieldRow}>
+   <MaterialIcons name="edit" size={18} color="#3B82F6" />
       <Text
         style={[
           styles.fieldLabel,
@@ -1375,6 +1376,7 @@ const ProfileView = ({ route, navigation }) => {
       </Text>
       <Pressable onPress={() => openFieldModal(type, value)}>
         <MaterialIcons name="edit" size={20} color="#3B82F6" />
+        <Text style={styles.editLink}>Edit</Text>
       </Pressable>
     </View>
   );
@@ -1415,7 +1417,11 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Resume */}
         <View style={styles.card}>
+
           <Text style={styles.sectionTitle}> Resume</Text>
+
+          <Text style={styles.sectionTitle}>📄 Resume</Text>
+ 
           <Text style={styles.valueText}>
             {resumeUrl || 'No resume uploaded'}
           </Text>
@@ -1424,17 +1430,23 @@ const ProfileView = ({ route, navigation }) => {
         {/* Summary */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}> Profile Summary</Text>
+
+          <Text style={styles.sectionTitle}>📝 Profile Summary</Text>
           <Text style={styles.valueText}>
             {summary || 'No summary provided'}
           </Text>
           <Pressable onPress={() => openFieldModal('summary', summary)}>
             <MaterialIcons name="edit" size={20} color="#3B82F6" />
+
+            <Text style={styles.editLink}>Edit</Text>
           </Pressable>
         </View>
 
         {/* Basic Details */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}> Basic Details</Text>
+
+          <Text style={styles.sectionTitle}>ℹ️ Basic Details</Text>
           {renderField('Email', email, 'email')}
           {renderField('Phone', phone, 'phone')}
           {renderField('Availability', availability, 'availability')}
@@ -1444,6 +1456,8 @@ const ProfileView = ({ route, navigation }) => {
         {/* Education */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}> Education</Text>
+
+          <Text style={styles.sectionTitle}>🎓 Education</Text>
           {education?.length > 0 ? (
             education.map((edu, idx) => (
               <View key={idx} style={styles.row}>
@@ -1455,6 +1469,8 @@ const ProfileView = ({ route, navigation }) => {
                   onPress={() => openFieldModal('education', edu.course, idx)}
                 >
                   <MaterialIcons name="edit" size={20} color="#3B82F6" />
+
+                  <Text style={styles.editLink}>Edit</Text>
                 </Pressable>
               </View>
             ))
@@ -1466,6 +1482,7 @@ const ProfileView = ({ route, navigation }) => {
         {/* Experience */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}> Professional Experience</Text>
+          <Text style={styles.sectionTitle}>💼 Professional Experience</Text>
           {experience?.length > 0 ? (
             experience.map((exp, idx) => (
               <View key={idx} style={styles.expBox}>
@@ -1476,6 +1493,7 @@ const ProfileView = ({ route, navigation }) => {
                 </Text>
                 <Pressable onPress={() => openExperienceModal(exp, idx)}>
                   <MaterialIcons name="edit" size={20} color="#3B82F6" />
+                  <Text style={styles.editLink}>Edit</Text>
                 </Pressable>
               </View>
             ))
@@ -1487,6 +1505,8 @@ const ProfileView = ({ route, navigation }) => {
         {/* Skills */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Skills</Text>
+
+          <Text style={styles.sectionTitle}>🛠 Skills</Text>
           <View style={styles.skillContainer}>
             {skills?.length > 0 ? (
               skills.map((skill, idx) => (
@@ -1619,6 +1639,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     justifyContent: 'space-between',
   },
+
+  valueText: { fontSize: wp(4), color: '#374151' },
+  editLink: { color: '#3B82F6', fontWeight: '600', marginTop: 6 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+
   fieldLabel: { fontWeight: '600', fontSize: wp(4), marginHorizontal: 6 },
   fieldValue: { flex: 1, fontSize: wp(4) },
   row: {
