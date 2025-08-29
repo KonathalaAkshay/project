@@ -1357,7 +1357,6 @@ const ProfileView = ({ route, navigation }) => {
 
   const renderField = (label, value, type) => (
     <View style={styles.fieldRow}>
-      <MaterialIcons name="edit" size={18} color="#3B82F6" />
       <Text
         style={[
           styles.fieldLabel,
@@ -1375,7 +1374,7 @@ const ProfileView = ({ route, navigation }) => {
         {value || 'Not provided'}
       </Text>
       <Pressable onPress={() => openFieldModal(type, value)}>
-        <Text style={styles.editLink}>Edit</Text>
+        <MaterialIcons name="edit" size={20} color="#3B82F6" />
       </Pressable>
     </View>
   );
@@ -1416,7 +1415,7 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Resume */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📄 Resume</Text>
+          <Text style={styles.sectionTitle}> Resume</Text>
           <Text style={styles.valueText}>
             {resumeUrl || 'No resume uploaded'}
           </Text>
@@ -1424,18 +1423,18 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Summary */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📝 Profile Summary</Text>
+          <Text style={styles.sectionTitle}> Profile Summary</Text>
           <Text style={styles.valueText}>
             {summary || 'No summary provided'}
           </Text>
           <Pressable onPress={() => openFieldModal('summary', summary)}>
-            <Text style={styles.editLink}>Edit</Text>
+            <MaterialIcons name="edit" size={20} color="#3B82F6" />
           </Pressable>
         </View>
 
         {/* Basic Details */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>ℹ️ Basic Details</Text>
+          <Text style={styles.sectionTitle}> Basic Details</Text>
           {renderField('Email', email, 'email')}
           {renderField('Phone', phone, 'phone')}
           {renderField('Availability', availability, 'availability')}
@@ -1444,7 +1443,7 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Education */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🎓 Education</Text>
+          <Text style={styles.sectionTitle}> Education</Text>
           {education?.length > 0 ? (
             education.map((edu, idx) => (
               <View key={idx} style={styles.row}>
@@ -1455,7 +1454,7 @@ const ProfileView = ({ route, navigation }) => {
                 <Pressable
                   onPress={() => openFieldModal('education', edu.course, idx)}
                 >
-                  <Text style={styles.editLink}>Edit</Text>
+                  <MaterialIcons name="edit" size={20} color="#3B82F6" />
                 </Pressable>
               </View>
             ))
@@ -1466,7 +1465,7 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Experience */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>💼 Professional Experience</Text>
+          <Text style={styles.sectionTitle}> Professional Experience</Text>
           {experience?.length > 0 ? (
             experience.map((exp, idx) => (
               <View key={idx} style={styles.expBox}>
@@ -1476,7 +1475,7 @@ const ProfileView = ({ route, navigation }) => {
                   {exp?.joining_date || '—'} → {exp?.end_date || 'Present'}
                 </Text>
                 <Pressable onPress={() => openExperienceModal(exp, idx)}>
-                  <Text style={styles.editLink}>Edit</Text>
+                  <MaterialIcons name="edit" size={20} color="#3B82F6" />
                 </Pressable>
               </View>
             ))
@@ -1487,7 +1486,7 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Skills */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🛠 Skills</Text>
+          <Text style={styles.sectionTitle}>Skills</Text>
           <View style={styles.skillContainer}>
             {skills?.length > 0 ? (
               skills.map((skill, idx) => (
@@ -1606,22 +1605,27 @@ const styles = StyleSheet.create({
   name: { fontSize: wp(6), fontWeight: 'bold' },
   email: { fontSize: wp(4), marginTop: 4 },
   sectionTitle: {
-    fontSize: wp(5), // Slightly larger for better mobile readability
-    fontWeight: '600', // Retained for bold emphasis
-    marginBottom: 12, // Increased spacing for improved vertical rhythm on phones
-    lineHeight: wp(6.5), // Added for better text flow and legibility
-    color: '#333', // Added high-contrast color (customize based on your app's theme)
+    fontSize: wp(5),
+    fontWeight: '600',
+    marginBottom: 12,
+    lineHeight: wp(6.5),
+    color: '#333',
   },
 
   valueText: { fontSize: wp(4), color: '#374151' },
-  editLink: { color: '#3B82F6', fontWeight: '600', marginTop: 6 },
-  fieldRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    justifyContent: 'space-between',
+  },
   fieldLabel: { fontWeight: '600', fontSize: wp(4), marginHorizontal: 6 },
   fieldValue: { flex: 1, fontSize: wp(4) },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 6,
+    alignItems: 'center',
   },
   expBox: {
     padding: 10,
