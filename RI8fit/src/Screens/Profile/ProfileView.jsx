@@ -1357,7 +1357,7 @@ const ProfileView = ({ route, navigation }) => {
 
   const renderField = (label, value, type) => (
     <View style={styles.fieldRow}>
-   <MaterialIcons name="edit" size={18} color="#3B82F6" />
+      <MaterialIcons name="edit" size={18} color="#3B82F6" />
       <Text
         style={[
           styles.fieldLabel,
@@ -1376,7 +1376,6 @@ const ProfileView = ({ route, navigation }) => {
       </Text>
       <Pressable onPress={() => openFieldModal(type, value)}>
         <MaterialIcons name="edit" size={20} color="#3B82F6" />
-        <Text style={styles.editLink}>Edit</Text>
       </Pressable>
     </View>
   );
@@ -1417,11 +1416,10 @@ const ProfileView = ({ route, navigation }) => {
 
         {/* Resume */}
         <View style={styles.card}>
-
           <Text style={styles.sectionTitle}> Resume</Text>
 
           <Text style={styles.sectionTitle}>📄 Resume</Text>
- 
+
           <Text style={styles.valueText}>
             {resumeUrl || 'No resume uploaded'}
           </Text>
@@ -1437,8 +1435,6 @@ const ProfileView = ({ route, navigation }) => {
           </Text>
           <Pressable onPress={() => openFieldModal('summary', summary)}>
             <MaterialIcons name="edit" size={20} color="#3B82F6" />
-
-            <Text style={styles.editLink}>Edit</Text>
           </Pressable>
         </View>
 
@@ -1461,16 +1457,13 @@ const ProfileView = ({ route, navigation }) => {
           {education?.length > 0 ? (
             education.map((edu, idx) => (
               <View key={idx} style={styles.row}>
-                <Text>
-                  {edu?.course || '—'} ·{edu?.university || '—'} (
-                  {edu?.end_year || '—'})
-                </Text>
+                <Text>{edu?.course || '—'}</Text>
+                <Text>{edu?.university || '—'}</Text>
+                <Text>{edu?.end_year || '—'}</Text>
                 <Pressable
                   onPress={() => openFieldModal('education', edu.course, idx)}
                 >
                   <MaterialIcons name="edit" size={20} color="#3B82F6" />
-
-                  <Text style={styles.editLink}>Edit</Text>
                 </Pressable>
               </View>
             ))
@@ -1493,7 +1486,6 @@ const ProfileView = ({ route, navigation }) => {
                 </Text>
                 <Pressable onPress={() => openExperienceModal(exp, idx)}>
                   <MaterialIcons name="edit" size={20} color="#3B82F6" />
-                  <Text style={styles.editLink}>Edit</Text>
                 </Pressable>
               </View>
             ))
