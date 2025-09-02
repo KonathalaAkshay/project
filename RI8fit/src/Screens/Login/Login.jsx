@@ -27,8 +27,8 @@ import {
 import { useAuth } from '../../Context/AuthContext';
 
 const Login = ({ navigation }) => {
-  const [username, setUsername] = useState('akshaykonathala08@gmail.com');
-  const [password, setPassword] = useState('Akshay');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const toast = useToast();
   const { setIsAuthenticated } = useAuth();
 

@@ -21,7 +21,7 @@ const EducationDetails = ({ navigation }) => {
   const [qualification, setQualification] = useState('');
   const [institution, setInstitution] = useState('');
   const [year, setYear] = useState('');
-  const [editingId, setEditingId] = useState(null); // ✅ for edit mode
+  const [editingId, setEditingId] = useState(null);
 
   const scrollRef = useRef(null);
   const { width, height } = Dimensions.get('window');
@@ -32,7 +32,6 @@ const EducationDetails = ({ navigation }) => {
 
   const isValidYear = /^\d{4}$/.test(year);
 
-  // ✅ Load education only once
   useEffect(() => {
     if (
       candidateData?.resume_data?.education?.length &&
@@ -57,7 +56,6 @@ const EducationDetails = ({ navigation }) => {
   const handleAddOrUpdate = () => {
     if (qualification.trim() && institution.trim() && isValidYear) {
       if (editingId) {
-        // ✅ Update existing entry
         const updatedList = educationList.map(item =>
           item.id === editingId
             ? {
@@ -72,7 +70,6 @@ const EducationDetails = ({ navigation }) => {
         setCandidateData(prev => ({ ...prev, education: updatedList }));
         setEditingId(null);
       } else {
-        // ✅ Add new entry
         const newEducation = {
           id: Date.now().toString(),
           qualification: qualification.trim(),
@@ -87,8 +84,6 @@ const EducationDetails = ({ navigation }) => {
           100,
         );
       }
-
-      // Reset form
       setQualification('');
       setInstitution('');
       setYear('');
@@ -106,7 +101,7 @@ const EducationDetails = ({ navigation }) => {
     setCandidateData(prev => ({ ...prev, education: updatedList }));
 
     if (editingId === id) {
-      // if deleting the one being edited
+      //deleting 
       setEditingId(null);
       setQualification('');
       setInstitution('');
