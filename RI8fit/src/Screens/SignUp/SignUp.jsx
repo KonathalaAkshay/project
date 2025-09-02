@@ -45,10 +45,8 @@ const SignUp = ({ navigation }) => {
 
   const { email, setEmail, phone, setPhone } = useContext(UserContext);
 
-  // const [email, setEmail] = useState('');
-  // const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('Akshay');
-  const [confirmPassword, setConfirmPassword] = useState('Akshay');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [accountCreated, setAccountCreated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
