@@ -22,8 +22,8 @@ const BottomNavBar = () => {
   const inactiveColor = isDarkMode ? '#D1D5DB' : '#6B7280';
 
   const handlelearning = () => {
-   navigation.navigate('EducationDetails');
-  }
+    Alert.alert('Learning');
+  };
 
   const handleProfile = async () => {
     try {
