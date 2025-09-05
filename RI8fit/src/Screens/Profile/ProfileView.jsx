@@ -1713,7 +1713,7 @@
 // export default ProfileView;
 
 // screens/Profile/ProfileView.js
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -1724,7 +1724,9 @@ import {
   Pressable,
   useColorScheme,
   Alert,
+  RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import BottomNavBar from '../../Components/NavBar/BottomNav';
 import api from '../../API/api';
@@ -1740,7 +1742,9 @@ const ProfileView = ({ route, navigation }) => {
   const isDark = colorScheme === 'dark';
   const { logout } = useAuth();
 
-  const { candidateData = {} } = route?.params ?? {};
+  const inputCandidate = route?.params?.candidateData ?? {};
+  const [refreshing, setRefreshing] = useState(false);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -1752,10 +1756,9 @@ const ProfileView = ({ route, navigation }) => {
   const [availability, setAvailability] = useState('');
   const [totalExp, setTotalExp] = useState('');
 
-  useEffect(() => {
-    const user = candidateData || {};
-    const resume = user.resume_data || {};
-
+  // Helper: derive skills cleanly from resume + employment
+  const deriveSkills = useCallback(user => {
+    const resume = user?.resume_data ?? {};
     const resumeSkills =
       resume?.technical_skills && resume?.technical_skills !== 'Not Specified'
         ? Array.isArray(resume.technical_skills)
@@ -1766,7 +1769,7 @@ const ProfileView = ({ route, navigation }) => {
         : [];
 
     const employmentSkills =
-      Array.isArray(user.employment) && user.employment.length > 0
+      Array.isArray(user?.employment) && user.employment.length > 0
         ? user.employment.flatMap(emp => {
             if (!emp?.skills_used) return [];
             if (Array.isArray(emp.skills_used))
@@ -1777,58 +1780,96 @@ const ProfileView = ({ route, navigation }) => {
           })
         : [];
 
-    setName(`${user.full_name || ''} ${user.last_name || ''}`.trim());
-    setEmail(user.email || '');
-    setPhone(user.phone_no || '');
-    setResumeUrl(user.resume_url || '');
-    setSummary(resume?.professional_summary || '');
-    setEducation(Array.isArray(user.education) ? user.education : []);
-    setExperience(
-      Array.isArray(user.employment)
-        ? user.employment.map(exp => ({
-            id: exp.id,
-            job_title: exp.job_title || '',
-            company_name: exp.company_name || '',
-            joining_date: exp.joining_date || '',
-            end_date: exp.end_date || '',
-            duration: exp.duration || '',
-          }))
-        : [],
-    );
-    setAvailability(resume?.availability || 'Not specified');
-    setTotalExp(user.total_exp_years || '');
-    setSkills([...new Set([...resumeSkills, ...employmentSkills])]);
-  }, [candidateData]);
+    return Array.from(new Set([...resumeSkills, ...employmentSkills]));
+  }, []);
 
-  useEffect(() => {
-    if (route?.params?.updatedBasic) {
+  // Centralized population of state from a candidate object
+  const populateFromCandidate = useCallback(
+    user => {
+      const resume = user?.resume_data ?? {};
+      setName(`${user?.full_name || ''} ${user?.last_name || ''}`.trim());
+      setEmail(user?.email || '');
+      setPhone(user?.phone_no || '');
+      setResumeUrl(user?.resume_url || '');
+      setSummary(resume?.professional_summary || '');
+      setEducation(Array.isArray(user?.education) ? user.education : []);
+      setExperience(
+        Array.isArray(user?.employment)
+          ? user.employment.map(exp => ({
+              id: exp?.id,
+              job_title: exp?.job_title || '',
+              company_name: exp?.company_name || '',
+              joining_date: exp?.joining_date || '',
+              end_date: exp?.end_date || '',
+              duration: exp?.duration || '',
+            }))
+          : [],
+      );
+      setAvailability(resume?.availability || 'Not specified');
+      setTotalExp(user?.total_exp_years || '');
+      setSkills(deriveSkills(user));
+    },
+    [deriveSkills],
+  );
+
+  // Apply any "updated" params over the loaded state (used after navigating back from edit screens)
+  const applyRouteParamUpdates = useCallback(() => {
+    const p = route?.params;
+    if (!p) return;
+
+    if (p.updatedBasic) {
       const {
         email: e,
-        phone: p,
+        phone: ph,
         availability: a,
         totalExp: t,
         summary: s,
-      } = route.params.updatedBasic;
+      } = p.updatedBasic;
       setEmail(e ?? '');
-      setPhone(p ?? '');
+      setPhone(ph ?? '');
       setAvailability(a ?? '');
       setTotalExp(t ?? '');
       setSummary(s ?? '');
     }
-    if (route?.params?.updatedEducation) {
-      setEducation(route.params.updatedEducation);
+    if (p.updatedEducation) {
+      setEducation(p.updatedEducation);
     }
-    if (route?.params?.updatedExperience) {
-      const updated = route.params.updatedExperience;
+    if (p.updatedExperience) {
+      const updated = p.updatedExperience;
       setExperience(updated);
       syncEmployment(updated).catch(() => {});
     }
-    if (route?.params?.updatedSkills) {
-      setSkills(route.params.updatedSkills);
+    if (p.updatedSkills) {
+      setSkills(p.updatedSkills);
     }
   }, [route?.params]);
 
-  const syncEmployment = async employmentDetails => {
+  // Refresh routine: repopulate from initial candidate, then apply route-driven updates
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // If later this needs API fetching for the candidate profile, do it here.
+      // For now, we rebuild state from route param + overlays.
+      populateFromCandidate(inputCandidate);
+      applyRouteParamUpdates();
+    } catch (e) {
+      // Surface a friendly error, keep UI usable
+      console.warn('Refresh error:', e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [inputCandidate, populateFromCandidate, applyRouteParamUpdates]);
+
+  // Auto refresh whenever the screen is focused (open/return), per React Navigation guidance
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+      // no cleanup needed for a one-shot refresh
+    }, [refresh]),
+  );
+
+  // Employment sync flow unchanged, guarded with token fetch
+  const syncEmployment = useCallback(async employmentDetails => {
     try {
       const token = await getItem(ACCESS_TOKEN);
       await api.put(
@@ -1854,44 +1895,22 @@ const ProfileView = ({ route, navigation }) => {
         Alert.alert('Error', 'Failed to update experience');
       }
     }
-  };
+  }, []);
 
-  const renderFieldRow = (label, value) => (
-    <View style={styles.fieldRow}>
-      {/* <MaterialIcons name="edit" size={18} color="#3B82F6" /> */}
-      <Text
-        style={[styles.fieldLabel, { color: isDark ? '#E5E7EB' : '#111827' }]}
-      >
-        {label}:
-      </Text>
-      <Text
-        style={[styles.fieldValue, { color: isDark ? '#D1D5DB' : '#374151' }]}
-      >
-        {value || 'Not provided'}
-      </Text>
-    </View>
-  );
-
-  // Edit Basic Details
-  const goEditBasic = () => {
+  // Navigation handlers (kept same behavior)
+  const goEditBasic = useCallback(() => {
     navigation.navigate('EditBasicDetailsScreen', {
       initial: { email, phone, availability, totalExp, summary },
     });
-  };
+  }, [navigation, email, phone, availability, totalExp, summary]);
 
-  // Edit Education
-  const goEditEducation = async () => {
+  const goEditEducation = useCallback(async () => {
     try {
       const token = await getItem(ACCESS_TOKEN);
-
       const response = await api.get('/candidates/get-education', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const educations = response.data?.data || [];
-
       navigation.navigate('EditEducationScreen', { initial: educations });
     } catch (error) {
       console.error('Error fetching education:', error);
@@ -1900,24 +1919,68 @@ const ProfileView = ({ route, navigation }) => {
         'Failed to fetch education details. Please try again.',
       );
     }
-  };
+  }, [navigation]);
 
-  // Edit Experience
-  const goEditExperience = () => {
-    navigation.navigate('EditExperienceScreen', { initial: experience });
-  };
+  const goEditExperience = useCallback(async () => {
+    try {
+      const token = await getItem(ACCESS_TOKEN);
+      const response = await api.get('/candidates/get-employment', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const experiences = response.data?.data || [];
+      navigation.navigate('EditExperienceScreen', { initial: experiences });
+    } catch (error) {
+      console.error(
+        'Error fetching experiences:',
+        error?.response?.data || error,
+      );
+      Alert.alert(
+        'Error',
+        'Failed to fetch experience details. Please try again.',
+      );
+    }
+  }, [navigation]);
 
-  // Edit Skills
-  const goEditSkills = () => {
+  const goEditSkills = useCallback(() => {
     navigation.navigate('EditSkillsScreen', { initial: skills });
-  };
+  }, [navigation, skills]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Yes', onPress: logout },
     ]);
-  };
+  }, [logout]);
+
+  // UI helpers
+  const renderFieldRow = useCallback(
+    (label, value) => (
+      <View style={styles.fieldRow}>
+        <Text
+          style={[styles.fieldLabel, { color: isDark ? '#E5E7EB' : '#111827' }]}
+        >
+          {label}:
+        </Text>
+        <Text
+          style={[styles.fieldValue, { color: isDark ? '#D1D5DB' : '#374151' }]}
+        >
+          {String(value ?? '').trim() || 'Not provided'}
+        </Text>
+      </View>
+    ),
+    [isDark],
+  );
+
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={refresh}
+        tintColor={isDark ? '#ffffff' : '#000000'}
+      />
+    ),
+    [refreshing, refresh, isDark],
+  );
 
   return (
     <View
@@ -1926,7 +1989,10 @@ const ProfileView = ({ route, navigation }) => {
         { backgroundColor: isDark ? '#111827' : '#bedaf5ff' },
       ]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={refreshControl}
+      >
         <View
           style={[
             styles.card,
@@ -1994,12 +2060,15 @@ const ProfileView = ({ route, navigation }) => {
               <MaterialIcons name="edit" size={20} color="#3B82F6" />
             </Pressable>
           </View>
+
           {education?.length ? (
             education.map((edu, idx) => (
-              <View key={idx} style={styles.row}>
-                <Text>{edu?.course || '—'}</Text>
-                <Text>{edu?.university || '—'}</Text>
-                <Text>{edu?.end_year || '—'}</Text>
+              <View key={idx} style={styles.eduItem}>
+                <Text style={styles.eduText}>{edu?.course || '—'}</Text>
+                <Text style={styles.eduText}>{edu?.university || '—'}</Text>
+                <Text style={[styles.eduText, { marginBottom: 8 }]}>
+                  {edu?.start_year+" - "+edu?.end_year || '—'}
+                </Text>
               </View>
             ))
           ) : (
@@ -2073,7 +2142,7 @@ const styles = StyleSheet.create({
     padding: wp(4),
     marginBottom: hp(2),
     backgroundColor: '#fff',
-    elevation: 3, // Android shadow
+    elevation: 3,
   },
   headerCard: { alignItems: 'center' },
   sectionHeader: {

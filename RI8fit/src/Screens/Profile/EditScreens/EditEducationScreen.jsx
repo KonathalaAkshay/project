@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import api from '../../../API/api';
+import { getItem, ACCESS_TOKEN } from '../../../Utils/helper';
 
 export default function EditEducationScreen({ navigation, route }) {
-  const initial = Array.isArray(route?.params?.initial)
-    ? route.params.initial
-    : [];
-  const [items, setItems] = useState(initial);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [formVisible, setFormVisible] = useState(false);
   const [form, setForm] = useState({
+    id: null,
     course: '',
     university: '',
     specialization: '',
@@ -27,13 +27,52 @@ export default function EditEducationScreen({ navigation, route }) {
     education_level: '',
     grading_system: '',
     marks: '',
+    course_type: '',
   });
   const [currentItem, setCurrentItem] = useState(null);
+
+  // 🔄 Fetch education list
+  // 🔄 Fetch education list
+  const fetchEducation = async () => {
+    try {
+      setLoading(true);
+      const token = await getItem(ACCESS_TOKEN);
+      const res = await api.get('/candidates/get-education', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Handle different response shapes
+      let data = res.data;
+      if (Array.isArray(data)) {
+        setItems(data);
+      } else if (Array.isArray(data?.data)) {
+        setItems(data.data);
+      } else if (Array.isArray(data?.education)) {
+        setItems(data.education);
+      } else {
+        setItems([]); // fallback
+      }
+    } catch (error) {
+      console.error(
+        'Fetch education error:',
+        error.response?.data || error.message,
+      );
+      Alert.alert('Error', 'Failed to fetch education');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Run on mount
+  useEffect(() => {
+    fetchEducation();
+  }, []);
 
   // Reset and show form for add
   const openAddForm = () => {
     setCurrentItem(null);
     setForm({
+      id: null,
       course: '',
       specialization: '',
       start_year: '',
@@ -42,6 +81,7 @@ export default function EditEducationScreen({ navigation, route }) {
       education_level: '',
       grading_system: '',
       marks: '',
+      course_type: '',
     });
     setFormVisible(true);
   };
@@ -58,6 +98,7 @@ export default function EditEducationScreen({ navigation, route }) {
       education_level: item.education_level || '',
       grading_system: item.grading_system || '',
       marks: item.marks || '',
+      course_type: item.course_type || '',
     });
     setFormVisible(true);
   };
@@ -68,24 +109,63 @@ export default function EditEducationScreen({ navigation, route }) {
       return Alert.alert('Invalid', 'Course and University are required');
     }
 
-    if (currentItem) {
-      try {
-        const res = await api.put(`/education/${currentItem.id}/`, form);
-        setItems(prev =>
-          prev.map(it => (it.id === currentItem.id ? res.data : it)),
+    try {
+      const token = await getItem(ACCESS_TOKEN);
+
+      if (currentItem) {
+        // Update
+        const payload = {
+          education_level: form.education_level,
+          university: form.university,
+          course: form.course,
+          specialization: form.specialization,
+          course_type: form.course_type,
+          start_year: Number(form.start_year),
+          end_year: Number(form.end_year),
+          grading_system: form.grading_system,
+          marks: form.marks,
+        };
+
+        await api.put(
+          `/candidates/update-education/${currentItem.id}`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          },
         );
-        setFormVisible(false);
-      } catch {
-        Alert.alert('Error', 'Failed to update education');
+      } else {
+        // Add
+        const payload = {
+          education_level: form.education_level,
+          university: form.university,
+          course: form.course,
+          specialization: form.specialization,
+          course_type: form.course_type,
+          start_year: Number(form.start_year),
+          end_year: Number(form.end_year),
+          grading_system: form.grading_system,
+          marks: form.marks,
+        };
+
+        await api.post('/candidates/add-education', [payload], {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
       }
-    } else {
-      try {
-        const res = await api.post('/education/', form);
-        setItems(prev => [...prev, res.data]);
-        setFormVisible(false);
-      } catch {
-        Alert.alert('Error', 'Failed to add education');
-      }
+
+      setFormVisible(false);
+      fetchEducation(); // 🔄 Refresh list after add/update
+    } catch (error) {
+      console.error(
+        'Save education error:',
+        error.response?.data || error.message,
+      );
+      Alert.alert('Error', 'Failed to save education');
     }
   };
 
@@ -94,13 +174,20 @@ export default function EditEducationScreen({ navigation, route }) {
     const item = items[index];
     if (item.id) {
       try {
-        await api.delete(`/education/${item.id}/`);
-      } catch {
+        const token = await getItem(ACCESS_TOKEN);
+        await api.delete(`/education/${item.id}/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (error) {
+        console.error(
+          'Delete education error:',
+          error.response?.data || error.message,
+        );
         Alert.alert('Error', 'Failed to delete education');
         return;
       }
     }
-    setItems(prev => prev.filter((_, i) => i !== index));
+    fetchEducation(); // 🔄 Refresh after delete
   };
 
   // Final save back to profile
@@ -114,6 +201,12 @@ export default function EditEducationScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      {loading && (
+        <View style={{ marginTop: 20 }}>
+          <ActivityIndicator size="large" color="#3B82F6" />
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         {!formVisible && (
           <TouchableOpacity style={styles.addBtn} onPress={openAddForm}>
@@ -148,6 +241,12 @@ export default function EditEducationScreen({ navigation, route }) {
               value={form.education_level}
               onChangeText={t => setForm({ ...form, education_level: t })}
             />
+            <Row
+              label="Course Type"
+              value={form.course_type}
+              onChangeText={t => setForm({ ...form, course_type: t })}
+            />
+
             <Row
               label="Start Year"
               value={form.start_year}
