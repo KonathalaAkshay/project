@@ -1844,27 +1844,34 @@ const ProfileView = ({ route, navigation }) => {
     }
   }, [route?.params]);
 
-  // Refresh routine: repopulate from initial candidate, then apply route-driven updates
+  // Refresh routine: always fetch latest candidate from API
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      // If later this needs API fetching for the candidate profile, do it here.
-      // For now, we rebuild state from route param + overlays.
-      populateFromCandidate(inputCandidate);
+      const token = await getItem(ACCESS_TOKEN);
+      const response = await api.get(
+        '/candidate/get-candidates-complete-details',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const freshCandidate = response.data?.data ?? {};
+      populateFromCandidate(freshCandidate);
+
+      // overlay any updates passed from other screens
       applyRouteParamUpdates();
     } catch (e) {
-      // Surface a friendly error, keep UI usable
       console.warn('Refresh error:', e);
+      Alert.alert('Error', 'Failed to refresh profile. Please try again.');
     } finally {
       setRefreshing(false);
     }
-  }, [inputCandidate, populateFromCandidate, applyRouteParamUpdates]);
+  }, [populateFromCandidate, applyRouteParamUpdates]);
 
-  // Auto refresh whenever the screen is focused (open/return), per React Navigation guidance
+  // Auto refresh
   useFocusEffect(
     useCallback(() => {
       refresh();
-      // no cleanup needed for a one-shot refresh
     }, [refresh]),
   );
 
@@ -2067,7 +2074,7 @@ const ProfileView = ({ route, navigation }) => {
                 <Text style={styles.eduText}>{edu?.course || '—'}</Text>
                 <Text style={styles.eduText}>{edu?.university || '—'}</Text>
                 <Text style={[styles.eduText, { marginBottom: 8 }]}>
-                  {edu?.start_year+" - "+edu?.end_year || '—'}
+                  {edu?.start_year + ' - ' + edu?.end_year || '—'}
                 </Text>
               </View>
             ))

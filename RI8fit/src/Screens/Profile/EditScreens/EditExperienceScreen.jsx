@@ -211,13 +211,8 @@ export default function EditExperienceScreen({ navigation, route }) {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Final save back to profile
-  const onSave = () => {
-    navigation.navigate({
-      name: 'ProfileView',
-      params: { updatedExperience: items },
-      merge: true,
-    });
+  const onBack = () => {
+    navigation.navigate('ProfileView');
   };
 
   if (loading) {
@@ -370,8 +365,8 @@ export default function EditExperienceScreen({ navigation, route }) {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
-          <Text style={styles.saveText}>Save</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={onBack}>
+          <Text style={styles.saveText}>Back</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

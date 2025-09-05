@@ -23,7 +23,6 @@ const BottomNavBar = () => {
 
   const handlelearning = () => {
     Alert.alert('Learning');
-    // navigation.navigate('EducationDetails');
   };
 
   const handleProfile = async () => {

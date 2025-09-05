@@ -150,7 +150,7 @@ export default function EditEducationScreen({ navigation, route }) {
           marks: form.marks,
         };
 
-        await api.post('/candidates/add-education', [payload], {
+        await api.post('/candidates/add-education', payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ export default function EditEducationScreen({ navigation, route }) {
       }
 
       setFormVisible(false);
-      fetchEducation(); // 🔄 Refresh list after add/update
+      fetchEducation();
     } catch (error) {
       console.error(
         'Save education error:',
@@ -187,16 +187,12 @@ export default function EditEducationScreen({ navigation, route }) {
         return;
       }
     }
-    fetchEducation(); // 🔄 Refresh after delete
+    fetchEducation();
   };
 
   // Final save back to profile
-  const onSave = () => {
-    navigation.navigate({
-      name: 'ProfileView',
-      params: { updatedEducation: items },
-      merge: true,
-    });
+  const onBack = () => {
+    navigation.navigate('ProfileView');
   };
 
   return (
@@ -320,8 +316,8 @@ export default function EditEducationScreen({ navigation, route }) {
           </View>
         ))}
 
-        <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
-          <Text style={styles.saveText}>Save</Text>
+        <TouchableOpacity style={styles.saveBtn} onPress={onBack}>
+          <Text style={styles.saveText}>Back</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
