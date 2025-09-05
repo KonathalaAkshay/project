@@ -34,7 +34,7 @@ const EducationDetails = ({ navigation }) => {
 
   const isValidYear = /^\d{4}$/.test(year);
 
-  // 🔹 Fetch education list from API
+  //Fetch education list from API
   const fetchEducation = useCallback(async () => {
     try {
       setLoading(true);
@@ -63,7 +63,7 @@ const EducationDetails = ({ navigation }) => {
     }
   }, []);
 
-  // 🔹 Refresh data whenever screen is focused
+  //Refresh data whenever screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchEducation();
@@ -335,23 +335,23 @@ const EducationDetails = ({ navigation }) => {
 
           <HStack space={3} mt={3}>
             <Button
-              size="sm"
-              colorScheme="blue"
-              leftIcon={<Icon as={MaterialIcons} name="edit" size="sm" />}
               onPress={goEditEducation}
-              borderRadius="lg"
+              variant="outline"
+              borderColor="#3B82F6"
+              _text={{ color: '#3B82F6', fontWeight: 'bold' }}
+              leftIcon={
+                <Icon
+                  as={MaterialIcons}
+                  name="edit"
+                  size="sm"
+                  color="#3B82F6"
+                />
+              }
+              rounded="lg"
+              px={8}
+              py={3}
             >
               Edit
-            </Button>
-            {/* Example delete button (currently needs an item id to work properly) */}
-            <Button
-              size="sm"
-              colorScheme="red"
-              leftIcon={<Icon as={MaterialIcons} name="delete" size="sm" />}
-              onPress={() => Alert.alert('Select an item to delete from list')}
-              borderRadius="lg"
-            >
-              Delete
             </Button>
           </HStack>
         </Box>
