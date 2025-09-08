@@ -1732,6 +1732,7 @@ import BottomNavBar from '../../Components/NavBar/BottomNav';
 import api from '../../API/api';
 import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
 import { useAuth } from '../../Context/AuthContext';
+import { Link, HStack, Box } from 'native-base';
 
 const { width, height } = Dimensions.get('window');
 const wp = p => (width * p) / 100;
@@ -1756,7 +1757,6 @@ const ProfileView = ({ route, navigation }) => {
   const [availability, setAvailability] = useState('');
   const [totalExp, setTotalExp] = useState('');
 
-  // Helper: derive skills cleanly from resume + employment
   const deriveSkills = useCallback(user => {
     const resume = user?.resume_data ?? {};
     const resumeSkills =
@@ -1783,7 +1783,6 @@ const ProfileView = ({ route, navigation }) => {
     return Array.from(new Set([...resumeSkills, ...employmentSkills]));
   }, []);
 
-  // Centralized population of state from a candidate object
   const populateFromCandidate = useCallback(
     user => {
       const resume = user?.resume_data ?? {};
@@ -1812,7 +1811,7 @@ const ProfileView = ({ route, navigation }) => {
     [deriveSkills],
   );
 
-  // Apply any "updated" params over the loaded state (used after navigating back from edit screens)
+  // Apply any "updated"
   const applyRouteParamUpdates = useCallback(() => {
     const p = route?.params;
     if (!p) return;
@@ -1844,7 +1843,7 @@ const ProfileView = ({ route, navigation }) => {
     }
   }, [route?.params]);
 
-  // Refresh routine: always fetch latest candidate from API
+  //Refresh
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -1857,8 +1856,6 @@ const ProfileView = ({ route, navigation }) => {
       );
       const freshCandidate = response.data?.data ?? {};
       populateFromCandidate(freshCandidate);
-
-      // overlay any updates passed from other screens
       applyRouteParamUpdates();
     } catch (e) {
       console.warn('Refresh error:', e);
@@ -1868,14 +1865,14 @@ const ProfileView = ({ route, navigation }) => {
     }
   }, [populateFromCandidate, applyRouteParamUpdates]);
 
-  // Auto refresh
+  //Auto refresh
   useFocusEffect(
     useCallback(() => {
       refresh();
     }, [refresh]),
   );
 
-  // Employment sync flow unchanged, guarded with token fetch
+  //Employment sync flow unchanged
   const syncEmployment = useCallback(async employmentDetails => {
     try {
       const token = await getItem(ACCESS_TOKEN);
@@ -1904,7 +1901,11 @@ const ProfileView = ({ route, navigation }) => {
     }
   }, []);
 
-  // Navigation handlers (kept same behavior)
+  const goEditResume = useCallback(() => {
+    navigation.navigate('EditResumeScreen', { initialUrl: resumeUrl });
+  }, [navigation, resumeUrl]);
+
+  // Navigation handlers
   const goEditBasic = useCallback(() => {
     navigation.navigate('EditBasicDetailsScreen', {
       initial: { email, phone, availability, totalExp, summary },
@@ -1959,7 +1960,6 @@ const ProfileView = ({ route, navigation }) => {
     ]);
   }, [logout]);
 
-  // UI helpers
   const renderFieldRow = useCallback(
     (label, value) => (
       <View style={styles.fieldRow}>
@@ -2027,9 +2027,36 @@ const ProfileView = ({ route, navigation }) => {
         {/* Resume */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Resume</Text>
-          <Text style={styles.valueText}>
-            {resumeUrl || 'No resume uploaded'}
-          </Text>
+          {resumeUrl ? (
+            <HStack alignItems="center" justifyContent="space-between">
+              <Link
+                href={resumeUrl}
+                isExternal
+                _text={{
+                  color: 'blue.500',
+                  textDecorationLine: 'underline',
+                  fontSize: 'md',
+                }}
+              >
+                View Resume
+              </Link>
+
+              <Box>
+                <Pressable onPress={goEditResume} hitSlop={8}>
+                  <MaterialIcons name="edit" size={20} color="#3B82F6" />
+                </Pressable>
+              </Box>
+            </HStack>
+          ) : (
+            <HStack alignItems="center" justifyContent="space-between">
+              <Text style={styles.valueText}>No resume uploaded</Text>
+              <Box>
+                <Pressable onPress={goEditResume} hitSlop={8}>
+                  <MaterialIcons name="edit" size={20} color="#3B82F6" />
+                </Pressable>
+              </Box>
+            </HStack>
+          )}
         </View>
 
         {/* Profile Summary */}
