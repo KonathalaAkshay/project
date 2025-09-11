@@ -3,43 +3,21 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 /**
- * This is the configuration block to customize your React Native Android app.
- * By default you don't need to apply any configuration, just uncomment the lines you need.
+ * React Native Gradle Plugin Config
  */
 react {
-    /* Folders */
-    // root = file("../../")
-    // reactNativeDir = file("../../node_modules/react-native")
-    // codegenDir = file("../../node_modules/@react-native/codegen")
-    // cliFile = file("../../node_modules/react-native/cli.js")
-
-    /* Variants */
-    // debuggableVariants = ["liteDebug", "prodDebug"]
-
-    /* Bundling */
-    // nodeExecutableAndArgs = ["node"]
-    // bundleCommand = "ram-bundle"
-    // bundleConfig = file(../rn-cli.config.js)
-    // bundleAssetName = "MyApplication.android.bundle"
-    // entryFile = file("../js/MyApplication.android.js")
-    // extraPackagerArgs = []
-
-    /* Hermes Commands */
-    // hermesCommand = "$rootDir/my-custom-hermesc/bin/hermesc"
-    // hermesFlags = ["-O", "-output-source-map"]
-
-    /* Autolinking */
     autolinkLibrariesWithApp()
 }
 
 /**
- * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
+ * Enable Proguard (R8) for Release builds
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true  // changed to true
 
 /**
- * The preferred build flavor of JavaScriptCore (JSC)
+ * Use Hermes instead of JSC (smaller + faster)
  */
+def enableHermes = true  // force Hermes
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
@@ -48,6 +26,7 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.ri8fit"
+
     defaultConfig {
         applicationId "com.ri8fit"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -55,6 +34,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -62,34 +42,69 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // replace with your keystore for real release
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
     }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+
+            // Shrink Java + resources
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources true
+
+            // ProGuard / R8 rules
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+    }
+
+    // Split per ABI (smaller APKs)
+    splits {
+    abi {
+        enable true
+        reset()
+        if (getGradle().getStartParameter().getTaskNames().toString().toLowerCase().contains("release")) {
+            include "armeabi-v7a", "arm64-v8a" // for release builds
+        } else {
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64" // for debug/emulator
+        }
+        universalApk false
+    }
+}
+
+
+    // Java 11 compatibility
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    aaptOptions {
+        cruncherEnabled = true
     }
 }
 
 dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
-    if (hermesEnabled.toBoolean()) {
+    if (enableHermes.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }
 }
 
-// 👇👇 Add this block below dependencies (OUTSIDE the android block)
+// Vector icons font support
 project.ext.vectoricons = [
-    iconFontNames: [ 'MaterialIcons.ttf' ] // Add more fonts like 'FontAwesome.ttf' if needed
+    iconFontNames: [ 'MaterialIcons.ttf' ]
 ]
-
-// 👇 Apply the fonts.gradle script to copy fonts to your Android build
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"

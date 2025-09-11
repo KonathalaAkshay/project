@@ -10,6 +10,7 @@ import {
   Center,
   useToast,
   Image,
+  Alert,
 } from 'native-base';
 import { TextInput, StyleSheet, Linking } from 'react-native';
 import axio from '../../API/axio';
@@ -27,8 +28,8 @@ import {
 import { useAuth } from '../../Context/AuthContext';
 
 const Login = ({ navigation }) => {
-  const [username, setUsername] = useState('akshaykonathala08@gmail.com');
-  const [password, setPassword] = useState('Akshay');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const toast = useToast();
   const { setIsAuthenticated } = useAuth();
 
@@ -91,7 +92,7 @@ const Login = ({ navigation }) => {
         password: password,
       });
 
-      if (response.data?.success && response.status === 200) {
+      if (response.data?.success) {
         const {
           username,
           access_token,
@@ -100,7 +101,6 @@ const Login = ({ navigation }) => {
           token_type,
         } = response.data.data;
 
-        // const expiryTime = Date.now() + 15 * 60 * 1000;
         await setItem(AUTH_DETAILS, {
           access_token,
           refresh_token,
@@ -108,7 +108,6 @@ const Login = ({ navigation }) => {
         });
         await setItem(ACCESS_TOKEN, access_token);
         await setItem(REFRESH_TOKEN, refresh_token);
-        // await setItem(EXPIRY_TIME, expiryTime.toString());
         await setItem(EXPIRY_TIME, expiry_time.toString());
         await setItem(USER_TYPE, token_type);
         await setItem(USER_DATA, username || '');

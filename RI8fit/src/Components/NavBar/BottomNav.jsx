@@ -21,6 +21,10 @@ const BottomNavBar = () => {
   const activeColor = isDarkMode ? '#60A5FA' : '#2563EB';
   const inactiveColor = isDarkMode ? '#D1D5DB' : '#6B7280';
 
+  const handlelearning = () => {
+    Alert.alert('Learning');
+  };
+
   const handleProfile = async () => {
     try {
       const token = await getItem(ACCESS_TOKEN);
@@ -78,7 +82,7 @@ const BottomNavBar = () => {
       </Pressable>
 
       {/* Learning */}
-      <Pressable style={styles.navItem} onPress={() => Alert.alert('Learning')}>
+      <Pressable style={styles.navItem} onPress={handlelearning}>
         <MaterialIcons
           name="menu-book"
           size={26}

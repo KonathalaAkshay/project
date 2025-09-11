@@ -254,117 +254,157 @@
 
 // export default EmploymentDetail;
 
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { CandidateContext } from '../../Context/CandidateContext'; // adjust path
-import { Button, Icon } from 'native-base';
-import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import {
+  Box,
+  Button,
+  Heading,
+  HStack,
+  Icon,
+  ScrollView,
+  Text,
+  VStack,
+  Spinner,
+} from 'native-base';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import api from '../../API/api'; // adjust path
+import { getItem, ACCESS_TOKEN } from '../../Utils/helper';
 
 const EmploymentDetails = ({ navigation }) => {
-  const { candidateData } = useContext(CandidateContext);
   const [experienceList, setExperienceList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  // Fetch experiences from API
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      setLoading(true);
+      try {
+        const token = await getItem(ACCESS_TOKEN);
+        const response = await api.get('/candidates/get-employment', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const experiences = response.data?.data || [];
+
+        // map for display
+        const mapped = experiences.map((exp, idx) => ({
+          id: idx.toString(),
+          company: exp.company_name || exp.company_organization || '—',
+          role: exp.job_title || exp.designation || '—',
+          startDate: exp.joining_date || exp.start_date || '—',
+          endDate: exp.end_date || 'Present',
+        }));
+
+        setExperienceList(mapped);
+      } catch (error) {
+        console.error(
+          'Error fetching experiences:',
+          error?.response?.data || error,
+        );
+        Alert.alert(
+          'Error',
+          'Failed to fetch experience details. Please try again.',
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExperiences();
+  }, [navigation]);
+
+  const handleNext = () => {
     navigation.navigate('CompleteSubmit');
   };
 
-  useEffect(() => {
-    if (candidateData?.resume_data?.professional_experience?.length) {
-      const mapped = candidateData.resume_data.professional_experience.map(
-        (exp, idx) => ({
-          id: idx.toString(),
-          company: exp.company_organization,
-          role: exp.designation,
-          startDate: exp.start_date,
-          endDate: exp.end_date,
-        }),
+  const handleEdit = async () => {
+    try {
+      const token = await getItem(ACCESS_TOKEN);
+      const response = await api.get('/candidates/get-employment', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const experiences = response.data?.data || [];
+      navigation.navigate('EditExperienceScreen', { initial: experiences });
+    } catch (error) {
+      console.error(
+        'Error fetching experiences:',
+        error?.response?.data || error,
       );
-      setExperienceList(mapped);
+      Alert.alert(
+        'Error',
+        'Failed to fetch experience details. Please try again.',
+      );
     }
-  }, [candidateData]);
+  };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 30 }}
-    >
-      <Text style={styles.heading}>Professional Experience</Text>
+    <ScrollView flex={1} bg="#F5F6FA" px={4} pb={10}>
+      <Heading size="lg" textAlign="center" mt={6} mb={4} color="coolGray.800">
+        Professional Experience
+      </Heading>
 
-      {experienceList.length > 0 ? (
-        experienceList.map(item => (
-          <View key={item.id} style={styles.card}>
-            <Text style={styles.company}>{item.company}</Text>
-            <Text style={styles.role}>{item.role}</Text>
-            <Text style={styles.dates}>
-              {item.startDate} → {item.endDate}
-            </Text>
-          </View>
-        ))
+      {loading ? (
+        <Spinner size="lg" color="blue.500" mt={10} />
+      ) : experienceList.length > 0 ? (
+        <VStack space={4} mb={6}>
+          {experienceList.map(item => (
+            <Box key={item.id} bg="white" rounded="2xl" p={4} shadow={3}>
+              <Text fontSize="lg" fontWeight="bold" color="coolGray.900">
+                {item.company}
+              </Text>
+              <Text fontSize="md" color="emerald.600" mb={1}>
+                {item.role}
+              </Text>
+              <Text fontSize="sm" color="coolGray.500">
+                {item.startDate} → {item.endDate}
+              </Text>
+            </Box>
+          ))}
+        </VStack>
       ) : (
-        <Text style={styles.noData}>No professional experience added</Text>
+        <Text textAlign="center" color="coolGray.500" fontSize="md" mt={10}>
+          No professional experience added
+        </Text>
       )}
 
-      <Button
-        onPress={handleSubmit}
-        bg="#3B82F6"
-        _pressed={{ bg: '#2563EB' }}
-        _text={{ color: '#fff', fontWeight: 'bold', letterSpacing: 0.5 }}
-        borderRadius="lg"
-        px={10}
-        py={3}
-        // rightIcon={<Icon as={MaterialIconss} name="arrow-forward" size="sm" />}
-      >
-        Next
-      </Button>
+      <HStack space={4} justifyContent="center" mt={4}>
+        <Button
+          onPress={handleEdit}
+          variant="outline"
+          borderColor="#3B82F6"
+          _text={{ color: '#3B82F6', fontWeight: 'bold' }}
+          leftIcon={
+            <Icon as={MaterialIcons} name="edit" size="sm" color="#3B82F6" />
+          }
+          rounded="lg"
+          px={8}
+          py={3}
+        >
+          Edit
+        </Button>
+
+        <Button
+          onPress={handleNext}
+          bg="#3B82F6"
+          _pressed={{ bg: '#2563EB' }}
+          _text={{ color: '#fff', fontWeight: 'bold' }}
+          rightIcon={
+            <Icon
+              as={MaterialIcons}
+              name="arrow-forward"
+              size="sm"
+              color="white"
+            />
+          }
+          rounded="lg"
+          px={8}
+          py={3}
+        >
+          Next
+        </Button>
+      </HStack>
     </ScrollView>
   );
 };
 
 export default EmploymentDetails;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F6FA',
-    paddingHorizontal: 16,
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginVertical: 16,
-    textAlign: 'center',
-    color: '#2C3E50',
-  },
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  company: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#34495E',
-    marginBottom: 4,
-  },
-  role: {
-    fontSize: 16,
-    color: '#16A085',
-    marginBottom: 6,
-  },
-  dates: {
-    fontSize: 14,
-    color: '#7F8C8D',
-  },
-  noData: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    textAlign: 'center',
-    marginTop: 30,
-  },
-});
