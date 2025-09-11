@@ -182,8 +182,15 @@ export default function EditExperienceScreen({ navigation, route }) {
       Alert.alert('Success', 'Experience saved successfully');
       fetchExperiences(); // refresh list
     } catch (error) {
-      console.error('Save Experience Error:', error.response?.data || error);
-      Alert.alert('Error', 'Failed to save experience');
+      if (
+        payload.employment_type === '' ||
+        payload.job_title === '' ||
+        payload.company_name === '' ||
+        payload.joining_date === '' ||
+        payload.end_date === ''
+      ) {
+        Alert.alert('Error', 'Please fill all the required fields');
+      }
     } finally {
       setLoading(false);
     }
@@ -266,18 +273,6 @@ export default function EditExperienceScreen({ navigation, route }) {
               label="End Date (YYYY-MM or Present)"
               value={form.end_date}
               onChangeText={t => setForm({ ...form, end_date: t })}
-            />
-            <Row
-              label="Years of Experience"
-              value={form.total_exp_years}
-              onChangeText={t => setForm({ ...form, total_exp_years: t })}
-              keyboardType="numeric"
-            />
-            <Row
-              label="Months of Experience"
-              value={form.total_exp_month}
-              onChangeText={t => setForm({ ...form, total_exp_month: t })}
-              keyboardType="numeric"
             />
             <Row
               label="Employment Type"

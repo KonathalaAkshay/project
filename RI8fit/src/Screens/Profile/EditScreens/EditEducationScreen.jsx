@@ -109,23 +109,30 @@ export default function EditEducationScreen({ navigation, route }) {
       return Alert.alert('Invalid', 'Course and University are required');
     }
 
+    // Safe conversion (avoid NaN if empty)
+    const startYear = form.start_year ? Number(form.start_year) : null;
+    const endYear = form.end_year ? Number(form.end_year) : null;
+
+    const payload = {
+      education_level: form.education_level,
+      university: form.university,
+      course: form.course,
+      specialization: form.specialization,
+      course_type: form.course_type,
+      start_year: startYear,
+      end_year: endYear,
+      grading_system: form.grading_system,
+      marks: form.marks,
+    };
+
     try {
       const token = await getItem(ACCESS_TOKEN);
+      if (!token) {
+        return Alert.alert('Session Expired', 'Please log in again.');
+      }
 
-      if (currentItem) {
+      if (currentItem?.id) {
         // Update
-        const payload = {
-          education_level: form.education_level,
-          university: form.university,
-          course: form.course,
-          specialization: form.specialization,
-          course_type: form.course_type,
-          start_year: Number(form.start_year),
-          end_year: Number(form.end_year),
-          grading_system: form.grading_system,
-          marks: form.marks,
-        };
-
         await api.put(
           `/candidates/update-education/${currentItem.id}`,
           payload,
@@ -138,18 +145,6 @@ export default function EditEducationScreen({ navigation, route }) {
         );
       } else {
         // Add
-        const payload = {
-          education_level: form.education_level,
-          university: form.university,
-          course: form.course,
-          specialization: form.specialization,
-          course_type: form.course_type,
-          start_year: Number(form.start_year),
-          end_year: Number(form.end_year),
-          grading_system: form.grading_system,
-          marks: form.marks,
-        };
-
         await api.post('/candidates/add-education', payload, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -165,7 +160,9 @@ export default function EditEducationScreen({ navigation, route }) {
         'Save education error:',
         error.response?.data || error.message,
       );
-      Alert.alert('Error', 'Failed to save education');
+      const errorMsg =
+        error.response?.data?.message || 'Failed to save education';
+      Alert.alert('Error', errorMsg);
     }
   };
 
