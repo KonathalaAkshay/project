@@ -1905,12 +1905,34 @@ const ProfileView = ({ route, navigation }) => {
     navigation.navigate('EditResumeScreen', { initialUrl: resumeUrl });
   }, [navigation, resumeUrl]);
 
-  // Navigation handlers
-  const goEditBasic = useCallback(() => {
-    navigation.navigate('EditBasicDetailsScreen', {
-      initial: { email, phone, availability, totalExp, summary },
-    });
-  }, [navigation, email, phone, availability, totalExp, summary]);
+  const goEditBasic = useCallback(async () => {
+    try {
+      const token = await getItem(ACCESS_TOKEN);
+
+      if (!token) {
+        throw new Error('No access token found');
+      }
+
+      const response = await api.get('/candidates/get-personal-details', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('Personal details:', response.data);
+
+      const details = response.data?.data || [];
+      navigation.navigate('EditBasicDetailsScreen', {
+        initial: details,
+        currentEmail: email,
+        currentPhone: phone,
+      });
+    } catch (error) {
+      console.error('Error fetching personal details:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to fetch personal details. Please try again.',
+      );
+    }
+  }, [navigation, email, phone]);
 
   const goEditEducation = useCallback(async () => {
     try {
